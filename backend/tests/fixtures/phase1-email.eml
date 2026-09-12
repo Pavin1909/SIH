@@ -1,0 +1,22 @@
+From: notifications@github.com
+To: analyst@example.org
+Subject: Security alert for your account
+Date: Sat, 12 Sep 2026 14:00:00 +0000
+Message-ID: <phase1-sandboxtrace-20260912@example.org>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="phase1-boundary"
+
+--phase1-boundary
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+A new sign-in was detected for your account.
+Review activity at https://github.com/account/security.
+
+--phase1-boundary
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+<!doctype html><html><body><h1>Security alert</h1><p>A new sign-in was detected.</p><p><a href="https://github.com/account/security">Review activity</a></p><script>window.example = true;</script></body></html>
+
+--phase1-boundary--

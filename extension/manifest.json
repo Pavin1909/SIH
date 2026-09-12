@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "SandBoxTrace for Gmail",
+  "version": "1.0.0",
+  "description": "Send opened Gmail messages to the configured SandBoxTrace Phase 1–3 backend.",
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:8000/*"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [{ "matches": ["https://mail.google.com/*"], "js": ["content.js"], "css": ["content.css"], "run_at": "document_idle" }],
+  "action": { "default_popup": "popup.html", "default_title": "SandBoxTrace" },
+  "options_ui": { "page": "options.html", "open_in_tab": true }
+}

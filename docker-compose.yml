@@ -1,0 +1,110 @@
+services:
+  postgres:
+    image: timescale/timescaledb:2.17.2-pg16
+    command: postgres -c shared_preload_libraries=timescaledb
+    environment:
+      POSTGRES_DB: sandboxtrace
+      POSTGRES_USER: sandboxtrace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sandboxtrace -d sandboxtrace"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      SANDBOXTRACE_DATABASE_URL: ${SANDBOXTRACE_DATABASE_URL:?Set SANDBOXTRACE_DATABASE_URL in .env}
+      SANDBOXTRACE_MODEL_NAME: ${SANDBOXTRACE_MODEL_NAME:?Set SANDBOXTRACE_MODEL_NAME to a real Hugging Face DistilBERT model}
+      SANDBOXTRACE_MODEL_REVISION: ${SANDBOXTRACE_MODEL_REVISION:-}
+      SANDBOXTRACE_SANDBOX_URL: http://sandbox:8080
+      SANDBOXTRACE_SANDBOX_TIMEOUT_SECONDS: ${SANDBOXTRACE_SANDBOX_TIMEOUT_SECONDS:-45}
+      SANDBOXTRACE_VLM_PROVIDER: ${SANDBOXTRACE_VLM_PROVIDER:-ollama}
+      SANDBOXTRACE_VLM_MODEL: ${SANDBOXTRACE_VLM_MODEL:-qwen2.5vl:7b}
+      SANDBOXTRACE_OLLAMA_URL: http://ollama:11434
+      SANDBOXTRACE_VLM_TIMEOUT_SECONDS: ${SANDBOXTRACE_VLM_TIMEOUT_SECONDS:-45}
+      SANDBOXTRACE_CORS_ORIGINS: ${SANDBOXTRACE_CORS_ORIGINS:-http://localhost:3000}
+      SANDBOXTRACE_THREAT_INTEL_TIMEOUT_SECONDS: ${SANDBOXTRACE_THREAT_INTEL_TIMEOUT_SECONDS:-20}
+      VIRUSTOTAL_API_KEY: ${VIRUSTOTAL_API_KEY:-}
+      URLSCAN_API_KEY: ${URLSCAN_API_KEY:-}
+      ABUSEIPDB_API_KEY: ${ABUSEIPDB_API_KEY:-}
+      IPINFO_TOKEN: ${IPINFO_TOKEN:-}
+      SANDBOXTRACE_GEOIP_PROVIDER: ${SANDBOXTRACE_GEOIP_PROVIDER:-ipinfo}
+      NEO4J_URI: ${NEO4J_URI:-bolt://neo4j:7687}
+      NEO4J_USER: ${NEO4J_USER:-neo4j}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-}
+      SANDBOXTRACE_API_KEY: ${SANDBOXTRACE_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      sandbox:
+        condition: service_started
+      neo4j:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    expose:
+      - "11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  neo4j:
+    image: neo4j:5.26-community
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-none}
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    expose:
+      - "7687"
+      - "7474"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  sandbox:
+    build: ./sandbox
+    expose:
+      - "8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
+  ollama_data:

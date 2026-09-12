@@ -1,0 +1,14 @@
+services:
+  postgres:
+    restart: unless-stopped
+  neo4j:
+    restart: unless-stopped
+  sandbox:
+    restart: unless-stopped
+  backend:
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
