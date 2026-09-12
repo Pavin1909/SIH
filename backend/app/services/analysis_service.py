@@ -17,14 +17,19 @@ def get_classifier(model_name: str, model_revision: str | None) -> DistilBertCla
     return DistilBertClassifier(settings)
 
 
+def display_text(text: str) -> str:
+    return text.split("\n\nLinks observed by Gmail:", 1)[0].strip()
+
+
 def analyze_email(db: Session, raw_email: bytes, settings: Settings | None = None) -> Analysis:
     from app.services.email_parser import parse_email
 
     parsed: ParsedEmail = parse_email(raw_email)
     email_hash = hashlib.sha256(raw_email).hexdigest()
     settings = settings or get_settings()
+    display_text_body = display_text(parsed.text_body)
     visible_html_text = html_to_text(parsed.html_body) if parsed.html_body else ""
-    model_input = "\n\n".join(part for part in (parsed.subject or "", parsed.text_body, visible_html_text) if part).strip()
+    model_input = "\n\n".join(part for part in (parsed.subject or "", display_text_body, visible_html_text) if part).strip()
     classifier = get_classifier(settings.model_name, settings.model_revision)
     prediction = classifier.classify(model_input)
 
@@ -36,7 +41,7 @@ def analyze_email(db: Session, raw_email: bytes, settings: Settings | None = Non
             recipients=parsed.recipients,
             subject=parsed.subject,
             headers=parsed.headers,
-            text_body=parsed.text_body,
+            text_body=display_text_body,
             html_body=parsed.html_body,
             raw_size=len(raw_email),
         )
@@ -45,6 +50,8 @@ def analyze_email(db: Session, raw_email: bytes, settings: Settings | None = Non
         for url, domain in extract_urls_and_domains(parsed.subject, parsed.text_body, parsed.html_body):
             db.add(EmailURL(email_id=email.id, url=url, domain=domain))
         db.flush()
+    else:
+        email.text_body = display_text_body
 
     analysis = Analysis(
         email_id=email.id,
@@ -64,12 +71,18 @@ def analyze_email(db: Session, raw_email: bytes, settings: Settings | None = Non
 
 
 def get_analysis(db: Session, analysis_id):
-    return db.scalar(
+    analysis = db.scalar(
         select(Analysis)
         .options(selectinload(Analysis.email).selectinload(Email.urls))
         .where(Analysis.id == analysis_id)
     )
+    if analysis is not None:
+        analysis.email.text_body = display_text(analysis.email.text_body)
+    return analysis
 
 
 def get_email(db: Session, email_id):
-    return db.scalar(select(Email).options(selectinload(Email.urls)).where(Email.id == email_id))
+    email = db.scalar(select(Email).options(selectinload(Email.urls)).where(Email.id == email_id))
+    if email is not None:
+        email.text_body = display_text(email.text_body)
+    return email

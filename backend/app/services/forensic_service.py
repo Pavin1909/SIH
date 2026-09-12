@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -7,6 +9,8 @@ from app.services.fusion import fuse_evidence
 from app.services.sandbox_client import SandboxClient
 from app.services.threat_intel import ThreatIntelClient
 from app.services.vlm_client import VLMClient
+
+logger = logging.getLogger(__name__)
 
 
 async def run_forensics(db: Session, analysis_id, url_id, settings: Settings | None = None) -> ForensicRun:
@@ -43,8 +47,14 @@ async def run_forensics(db: Session, analysis_id, url_id, settings: Settings | N
         from app.services.phase3_service import enrich_forensic_run
 
         run = await enrich_forensic_run(db, run.id, settings)
-    except Exception:
+    except Exception as exc:
+        logger.exception("Phase 3 enrichment failed for forensic run %s", run.id)
         db.rollback()
+        run = db.scalar(select(ForensicRun).where(ForensicRun.id == run.id))
+        if run is not None:
+            run.fused_evidence = {**run.fused_evidence, "phase3": {"status": "error", "error": str(exc)}}
+            db.commit()
+            db.refresh(run)
     return run
 
 

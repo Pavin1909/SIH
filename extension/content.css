@@ -1,3 +1,8 @@
-#sandboxtrace-gmail-banner { position: fixed; z-index: 2147483647; top: 12px; right: 16px; max-width: 420px; display: grid; gap: 7px; padding: 14px 16px; border-radius: 10px; color: #fff; font: 14px/1.4 Arial, sans-serif; box-shadow: 0 8px 30px rgba(0,0,0,.28); }
+#sandboxtrace-gmail-banner { position: fixed; z-index: 2147483647; top: 16px; right: 20px; width: min(420px, calc(100vw - 40px)); display: grid; gap: 7px; padding: 15px 17px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; color: #fff; font: 14px/1.45 Arial, sans-serif; box-shadow: 0 12px 38px rgba(0,0,0,.34); backdrop-filter: blur(12px); animation: sandboxtrace-in .2s ease-out; }
 #sandboxtrace-gmail-banner strong { font-size: 15px; } #sandboxtrace-gmail-banner a { color: inherit; font-weight: 700; text-decoration: underline; }
-.sandboxtrace-scanning { background: #155e75; } .sandboxtrace-suspicious { background: #92400e; } .sandboxtrace-malicious, .sandboxtrace-error { background: #991b1b; }
+#sandboxtrace-gmail-banner button { width: fit-content; border: 1px solid rgba(255,255,255,.55); border-radius: 5px; padding: 5px 8px; background: rgba(0,0,0,.2); color: #fff; cursor: pointer; }
+.sandboxtrace-scanning { background: linear-gradient(135deg, #155e75ee, #164e63ee); } .sandboxtrace-suspicious { background: linear-gradient(135deg, #92400eee, #78350fee); } .sandboxtrace-malicious, .sandboxtrace-error { background: linear-gradient(135deg, #991b1bee, #7f1d1dee); }
+.sandboxtrace-safe { background: linear-gradient(135deg, #166534ee, #14532dee); }
+.sandboxtrace-scanning::before { content: ""; width: 8px; height: 8px; margin-right: 2px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 0 5px #67e8f933; animation: sandboxtrace-pulse 1.2s infinite; }
+@keyframes sandboxtrace-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sandboxtrace-pulse { 50% { opacity: .35; transform: scale(.75); } }

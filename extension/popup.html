@@ -1,1 +1,21 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="stylesheet" href="popup.css"><title>SandBoxTrace</title></head><body><main><p class="eyebrow">SandBoxTrace for Gmail</p><h1 id="status">Ready</h1><p id="detail">Open a Gmail message to start a scan.</p><a id="investigation" hidden target="_blank" rel="noreferrer">Open full investigation</a><button id="options">Settings</button></main><script src="popup.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="popup.css">
+  <title>SandBoxTrace</title>
+</head>
+<body>
+  <main class="shell">
+    <header class="brand"><span class="brand-mark">S</span><div><p class="eyebrow">Gmail protection</p><h1>SandBoxTrace</h1></div><span id="connection" class="connection-dot" title="Backend status"></span></header>
+    <section id="status-card" class="status-card status-idle" aria-live="polite">
+      <div class="status-heading"><span id="status-icon" class="status-icon">•</span><div><p id="status" class="status-title">Ready to scan</p><p id="detail" class="status-detail">Open a Gmail message to start an automatic analysis.</p></div></div>
+      <dl class="facts"><div><dt>Verdict</dt><dd id="verdict">—</dd></div><div><dt>Risk</dt><dd id="risk">—</dd></div></dl>
+    </section>
+    <div class="actions"><a id="investigation" class="primary" hidden target="_blank" rel="noreferrer">View investigation <span>↗</span></a><button id="options" class="secondary">Settings</button></div>
+    <p class="hint">Analysis starts automatically when you open a Gmail message. Use “Analyze again” on the Gmail banner to retry.</p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
