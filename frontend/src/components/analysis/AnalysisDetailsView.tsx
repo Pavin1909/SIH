@@ -20,25 +20,8 @@ import {
 import { RiskIndicator } from "../ui/RiskIndicator";
 import { ErrorState } from "../ui/ErrorState";
 import { LoadingState } from "../ui/LoadingState";
-import type { Analysis, AnalysisWithEmail, EmailInfo, ForensicRun } from "../../types";
+import type { Analysis, EmailInfo, ForensicRun } from "../../types";
 import { dateTime, percent, riskLevelFromAnalysis, verdictTone } from "../../utils";
-
-const cache = {
-  get<T>(key: string): T | null {
-    try {
-      return JSON.parse(localStorage.getItem(key) || "null") as T | null;
-    } catch {
-      return null;
-    }
-  },
-  set(key: string, value: unknown) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      /* ignore */
-    }
-  },
-};
 
 function formatBytes(bytes?: number): string {
   if (!bytes || bytes === 0) return "0 B";
@@ -85,28 +68,26 @@ export function AnalysisDetailsView() {
     setLoading(true);
     setError(null);
     setNotFound(false);
+    setAnalysis(null);
+    setEmail(null);
+    setLinkedRun(null);
 
     try {
       // 1. Fetch Analysis details
       const detail = await api.analysis(analysisId);
 
-      // 2. Fetch or retrieve Email metadata
-      const cached = cache.get<AnalysisWithEmail>("lastAnalysis");
-      let emailDetail: EmailInfo;
-      if (cached && cached.id === detail.id && cached.email) {
-        emailDetail = cached.email;
-      } else {
-        emailDetail = await api.email(detail.email_id);
-      }
+      // 2. Always fetch metadata for this route's analysis ID.
+      const emailDetail: EmailInfo = await api.email(detail.email_id);
 
       setAnalysis(detail);
       setEmail(emailDetail);
-
-      // 3. Check for any cached or completed forensic run linked to this analysis
-      const cachedRun = cache.get<ForensicRun>("lastRun");
-      if (cachedRun && cachedRun.analysis_id === detail.id) {
-        setLinkedRun(cachedRun);
+      try {
+        setLinkedRun(await api.latestForensicsForAnalysis(detail.id));
+      } catch (forensicErr) {
+        if (!(forensicErr instanceof ApiError && forensicErr.status === 404)) throw forensicErr;
+        setLinkedRun(null);
       }
+
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         setNotFound(true);
@@ -142,7 +123,6 @@ export function AnalysisDetailsView() {
       setForensicStage("Executing Playwright, VLM, and live GeoIP fusion…");
       const run = await api.startForensics(analysis.id, urlId);
       setForensicStage("Forensics complete. Redirecting…");
-      cache.set("lastRun", run);
       setLinkedRun(run);
       navigate(`/forensics/${run.id}`);
     } catch (err) {
@@ -196,8 +176,12 @@ export function AnalysisDetailsView() {
       analysis.url_phishing_probability
     : null;
 
-  const riskLevel = analysis ? riskLevelFromAnalysis(analysis.label, effectiveProb) : "UNKNOWN";
-  const tone = analysis ? verdictTone(analysis.label) : "neutral";
+  const canonicalVerdict = linkedRun?.verdict || null;
+  const displayedVerdict = canonicalVerdict || analysis?.label || "UNKNOWN";
+  const riskLevel = canonicalVerdict
+    ? canonicalVerdict === "BENIGN" ? "SAFE" : canonicalVerdict === "SUSPICIOUS" ? "SUSPICIOUS" : "MALICIOUS"
+    : analysis ? riskLevelFromAnalysis(analysis.label, effectiveProb) : "UNKNOWN";
+  const tone = verdictTone(displayedVerdict);
 
   // Semantic styles for the primary verdict panel based strictly on real backend tone
   const verdictGlowClass = {
@@ -345,7 +329,7 @@ export function AnalysisDetailsView() {
             <div className="flex flex-wrap items-center gap-4">
               <RiskIndicator level={riskLevel} size="lg" />
               <span className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1 font-mono text-xs text-slate-300">
-                {analysis.label}
+                {displayedVerdict}
               </span>
             </div>
 
@@ -409,8 +393,9 @@ export function AnalysisDetailsView() {
             </h3>
           </div>
           <p className="mt-2 text-xs leading-relaxed text-slate-300">
-            Automated NLP threat classifier (<span className="font-mono text-cyan-300/90">{analysis.model_name}</span>) categorized this artifact as{" "}
-            <span className="font-semibold text-white">{analysis.label}</span> with{" "}
+            Automated analysis categorized this artifact with the canonical forensic verdict{" "}
+            <span className="font-semibold text-white">{displayedVerdict}</span>. The classifier used{" "}
+            <span className="font-mono text-cyan-300/90">{analysis.model_name}</span> and reported{" "}
             <span className="font-semibold text-cyan-300">{percent(analysis.confidence)}</span> model confidence.
             {analysis.url_phishing_probability !== null && (
               <>
@@ -868,10 +853,10 @@ export function AnalysisDetailsView() {
                       <AlertTriangle size={18} className="text-rose-400 shrink-0 mt-0.5" />
                       <div className="space-y-1">
                         <h4 className="text-xs font-semibold text-rose-200">
-                          Elevated Threat Verdict: {analysis.label}
+                          Elevated Threat Verdict: {displayedVerdict}
                         </h4>
                         <p className="text-xs text-rose-300/80 leading-relaxed">
-                          The NLP classifier ({analysis.model_name}) identified pattern signatures matching {analysis.label} with {percent(analysis.confidence)} confidence.
+                          Backend evidence fusion returned {displayedVerdict}; the underlying classifier confidence was {percent(analysis.confidence)}.
                         </p>
                       </div>
                     </div>

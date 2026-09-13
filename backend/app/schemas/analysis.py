@@ -4,6 +4,8 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.email import EmailResponse
+from app.schemas.forensics import ForensicResponse
+
 
 
 class AnalysisResponse(BaseModel):
@@ -23,3 +25,8 @@ class AnalysisResponse(BaseModel):
 
 class AnalysisWithEmailResponse(AnalysisResponse):
     email: EmailResponse
+
+
+class LatestInvestigationResponse(BaseModel):
+    analysis: AnalysisWithEmailResponse | None = None
+    forensic: ForensicResponse | None = None

@@ -16,25 +16,8 @@ import {
   X,
 } from "../icons";
 import { RiskIndicator } from "../ui/RiskIndicator";
-import type { Analysis, AnalysisWithEmail, EmailInfo, ForensicRun } from "../../types";
+import type { Analysis, EmailInfo } from "../../types";
 import { dateTime, percent, riskLevelFromAnalysis } from "../../utils";
-
-const cache = {
-  get<T>(key: string): T | null {
-    try {
-      return JSON.parse(localStorage.getItem(key) || "null") as T | null;
-    } catch {
-      return null;
-    }
-  },
-  set(key: string, value: unknown) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      /* ignore */
-    }
-  },
-};
 
 function probability(analysis: Analysis) {
   return (
@@ -80,19 +63,20 @@ export function EmailAnalysisConsole() {
   // Active Tab for Evidence (Body vs Headers)
   const [activeTab, setActiveTab] = useState<"body" | "headers">("body");
 
-  // Load Analysis Details when analysisId changes or load from cache if on /email-analysis
+  // Route state is authoritative. The upload route must never resurrect an
+  // older analysis from localStorage after navigating away and back.
   useEffect(() => {
     let active = true;
 
     if (analysisId) {
+      setAnalysis(null);
+      setEmail(null);
       setLoadingDetails(true);
       setDetailsError(null);
       (async () => {
         try {
           const detail = await api.analysis(analysisId);
-          const saved = cache.get<AnalysisWithEmail>("lastAnalysis");
-          const message =
-            saved?.id === detail.id ? saved.email : await api.email(detail.email_id);
+          const message = await api.email(detail.email_id);
 
           if (active) {
             setAnalysis(detail);
@@ -109,17 +93,10 @@ export function EmailAnalysisConsole() {
         }
       })();
     } else {
-      // Check if there is an active analysis in cache
-      const cached = cache.get<AnalysisWithEmail>("lastAnalysis");
-      if (cached && active) {
-        setAnalysis(cached);
-        setEmail(cached.email);
-        setLoadingDetails(false);
-      } else {
-        setAnalysis(null);
-        setEmail(null);
-        setLoadingDetails(false);
-      }
+      setAnalysis(null);
+      setEmail(null);
+      setDetailsError(null);
+      setLoadingDetails(false);
     }
 
     return () => {
@@ -175,7 +152,6 @@ export function EmailAnalysisConsole() {
 
     try {
       const result = await api.analyzeEmail(file);
-      cache.set("lastAnalysis", result);
       setAnalysis(result);
       setEmail(result.email);
       setFile(null);
@@ -204,7 +180,6 @@ export function EmailAnalysisConsole() {
       setForensicsStage("Collecting DOM, network, and VLM evidence…");
       const run = await api.startForensics(analysis.id, urlId);
       setForensicsStage("Web forensics complete");
-      cache.set("lastRun", run);
       navigate(`/forensics/${run.id}`);
     } catch (err) {
       setForensicsStage("");
@@ -435,16 +410,17 @@ export function EmailAnalysisConsole() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Investigation Verdict
+                  Email Model Classification
                 </span>
                 <div className="mt-1 flex items-center gap-3">
                   <h2 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-white">
-                    {analysis.label}
+                    {analysis.label.replace(/_/g, " ")}
                   </h2>
                   <RiskIndicator level={riskLevel} size="md" />
                 </div>
                 <p className="mt-1.5 text-xs text-slate-400">
-                  Evaluated with {analysis.model_name}
+                  Model signal only â€” final verdict is determined after webpage forensics.
+                  <span className="block mt-1 text-slate-500">Evaluated with {analysis.model_name}</span>
                 </p>
               </div>
 

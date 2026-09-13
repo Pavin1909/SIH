@@ -1,4 +1,4 @@
-import type { Analysis, AnalysisWithEmail, EmailInfo, ForensicReport, ForensicRun } from "./types";
+import type { Analysis, AnalysisWithEmail, EmailInfo, ForensicReport, ForensicRun, LatestInvestigation } from "./types";
 
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
 
@@ -25,6 +25,8 @@ export const api = {
     return request<AnalysisWithEmail>("/api/v1/emails/analyze", { method: "POST", body: form });
   },
   analysis: (id: string) => request<Analysis>(`/api/v1/analyses/${id}`),
+  latestInvestigation: () => request<LatestInvestigation>("/api/v1/investigations/latest"),
+  latestForensicsForAnalysis: (analysisId: string) => request<ForensicRun>(`/api/v1/analyses/${analysisId}/forensics/latest`),
   email: (id: string) => request<EmailInfo>(`/api/v1/emails/${id}`),
   startForensics: (analysisId: string, urlId: string) => request<ForensicRun>(`/api/v1/analyses/${analysisId}/forensics/${urlId}`, { method: "POST" }),
   forensics: (runId: string) => request<ForensicRun>(`/api/v1/forensics/${runId}`),

@@ -2,11 +2,12 @@ import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect, status
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import Settings, get_settings
 from app.database.session import get_db
-from app.schemas.analysis import AnalysisResponse, AnalysisWithEmailResponse
+from app.schemas.analysis import AnalysisResponse, AnalysisWithEmailResponse, LatestInvestigationResponse
 from app.schemas.email import EmailResponse
 from app.schemas.forensics import ForensicResponse, ReportResponse
 from app.services.analysis_service import analyze_email, get_analysis, get_email
@@ -17,6 +18,7 @@ from app.services.auth import require_phase3_access
 from app.services.phase3_service import enrich_forensic_run
 from app.services.reporting import get_report
 from app.services.status import status_manager
+from app.models import Analysis, Email, ForensicRun
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1")
@@ -54,6 +56,40 @@ def read_analysis(analysis_id: UUID, db: Session = Depends(get_db)) -> AnalysisR
     if analysis is None:
         raise HTTPException(status_code=404, detail="Analysis not found")
     return analysis
+
+
+@router.get("/investigations/latest", response_model=LatestInvestigationResponse)
+def read_latest_investigation(db: Session = Depends(get_db)) -> LatestInvestigationResponse:
+    analysis = db.scalar(
+        select(Analysis)
+        .options(selectinload(Analysis.email).selectinload(Email.urls))
+        .order_by(Analysis.created_at.desc())
+        .limit(1)
+    )
+    if analysis is None:
+        return {"analysis": None, "forensic": None}
+    forensic = db.scalar(
+        select(ForensicRun)
+        .options(selectinload(ForensicRun.browser_observation), selectinload(ForensicRun.provider_observations))
+        .where(ForensicRun.analysis_id == analysis.id)
+        .order_by(ForensicRun.created_at.desc())
+        .limit(1)
+    )
+    return {"analysis": analysis, "forensic": forensic}
+
+
+@router.get("/analyses/{analysis_id}/forensics/latest", response_model=ForensicResponse)
+def read_latest_forensic_for_analysis(analysis_id: UUID, db: Session = Depends(get_db)) -> ForensicResponse:
+    run = db.scalar(
+        select(ForensicRun)
+        .options(selectinload(ForensicRun.browser_observation), selectinload(ForensicRun.provider_observations))
+        .where(ForensicRun.analysis_id == analysis_id)
+        .order_by(ForensicRun.created_at.desc())
+        .limit(1)
+    )
+    if run is None:
+        raise HTTPException(status_code=404, detail="No forensic run exists for this analysis")
+    return run
 
 
 @router.get("/emails/{email_id}", response_model=EmailResponse)

@@ -18,16 +18,6 @@ import { CyberGlobe } from "./CyberGlobe";
 import type { Analysis, AnalysisWithEmail, ForensicRun } from "../../types";
 import { dateTime, percent } from "../../utils";
 
-const cache = {
-  get<T>(key: string): T | null {
-    try {
-      return JSON.parse(localStorage.getItem(key) || "null") as T | null;
-    } catch {
-      return null;
-    }
-  },
-};
-
 function probability(analysis: Analysis) {
   return (
     analysis.phishing_probability ??
@@ -38,8 +28,8 @@ function probability(analysis: Analysis) {
 
 export function Dashboard() {
   const [health, setHealth] = useState<SystemStatus>("checking");
-  const analysis = cache.get<AnalysisWithEmail>("lastAnalysis");
-  const run = cache.get<ForensicRun>("lastRun");
+  const [analysis, setAnalysis] = useState<AnalysisWithEmail | null>(null);
+  const [run, setRun] = useState<ForensicRun | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -55,6 +45,16 @@ export function Dashboard() {
         if (!isMounted) return;
         setHealth("offline");
       });
+
+    api.latestInvestigation().then((latest) => {
+      if (!isMounted) return;
+      setAnalysis(latest.analysis);
+      setRun(latest.forensic);
+    }).catch(() => {
+      if (!isMounted) return;
+      setAnalysis(null);
+      setRun(null);
+    });
 
     return () => {
       isMounted = false;
@@ -278,18 +278,38 @@ export function Dashboard() {
             </button>
           </div>
 
-          {/* Body: Empty State with subtle cyber grid */}
-          <div className="flex flex-1 flex-col items-center justify-center py-14 px-4 text-center rounded-2xl border border-white/[0.04] bg-[#091122]/40 mt-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-slate-400 shadow-inner">
-              <BarChart size={24} className="text-slate-400" />
+          {analysis ? (() => {
+            const score = run?.risk_score ?? ((probability(analysis) ?? 0) * 100);
+            const normalized = Math.max(0, Math.min(100, score));
+            const barColor = normalized >= 70 ? "#fb7185" : normalized >= 35 ? "#fbbf24" : "#22d3ee";
+            return (
+              <div className="mt-5 rounded-2xl border border-white/[0.04] bg-[#091122]/70 p-4">
+                <div className="mb-3 flex items-center justify-between text-xs">
+                  <span className="font-medium text-slate-300">Latest investigation risk</span>
+                  <span className="font-mono text-cyan-300">{normalized.toFixed(0)}/100</span>
+                </div>
+                <svg viewBox="0 0 420 150" className="h-40 w-full" role="img" aria-label={`Risk score ${normalized.toFixed(0)} out of 100`}>
+                  <line x1="24" y1="124" x2="396" y2="124" stroke="#334155" strokeWidth="1" />
+                  <line x1="24" y1="74" x2="396" y2="74" stroke="#1e293b" strokeWidth="1" strokeDasharray="4 5" />
+                  <line x1="24" y1="24" x2="396" y2="24" stroke="#1e293b" strokeWidth="1" strokeDasharray="4 5" />
+                  <polyline points={`24,${124 - normalized} 210,${124 - normalized} 396,${124 - normalized}`} fill="none" stroke={barColor} strokeWidth="3" strokeLinecap="round" />
+                  <circle cx="210" cy={124 - normalized} r="6" fill={barColor} />
+                  <text x="24" y="145" fill="#64748b" fontSize="10">Email</text>
+                  <text x="194" y="145" fill="#64748b" fontSize="10">Current run</text>
+                  <text x="370" y="145" fill="#64748b" fontSize="10">Latest</text>
+                  <text x="2" y="28" fill="#64748b" fontSize="10">100</text>
+                  <text x="8" y="128" fill="#64748b" fontSize="10">0</text>
+                </svg>
+                <p className="mt-1 text-[11px] text-slate-500">Calculated from the persisted backend risk score; no synthetic activity points are shown.</p>
+              </div>
+            );
+          })() : (
+            <div className="flex flex-1 flex-col items-center justify-center py-14 px-4 text-center rounded-2xl border border-white/[0.04] bg-[#091122]/40 mt-5">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-slate-400 shadow-inner"><BarChart size={24} className="text-slate-400" /></div>
+              <h3 className="mt-4 text-sm font-semibold text-slate-200">No activity data yet</h3>
+              <p className="mt-1.5 max-w-sm text-xs text-slate-400">Analysis activity will appear here as investigations are performed.</p>
             </div>
-            <h3 className="mt-4 text-sm font-semibold text-slate-200">
-              No activity data yet
-            </h3>
-            <p className="mt-1.5 max-w-sm text-xs text-slate-400">
-              Analysis activity will appear here as investigations are performed.
-            </p>
-          </div>
+          )}
         </div>
 
         {/* Right Card: Recent Investigations */}

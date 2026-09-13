@@ -27,23 +27,6 @@ import { LoadingState } from "../ui/LoadingState";
 import type { ForensicRun, InfrastructureObservation, ProviderObservation } from "../../types";
 import { dateTime, verdictTone } from "../../utils";
 
-const cache = {
-  get<T>(key: string): T | null {
-    try {
-      return JSON.parse(localStorage.getItem(key) || "null") as T | null;
-    } catch {
-      return null;
-    }
-  },
-  set(key: string, value: unknown) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      /* ignore */
-    }
-  },
-};
-
 interface PipelineStage {
   id: string;
   name: string;
@@ -57,7 +40,7 @@ export function WebForensicsConsole() {
   const navigate = useNavigate();
 
   // Core Data States
-  const [run, setRun] = useState<ForensicRun | null>(cache.get<ForensicRun>("lastRun"));
+  const [run, setRun] = useState<ForensicRun | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [enriching, setEnriching] = useState<boolean>(false);
@@ -70,6 +53,7 @@ export function WebForensicsConsole() {
 
   // Load Forensics Data
   const loadForensics = async () => {
+    setRun(null);
     if (!runId) {
       setError("No forensic run identifier specified.");
       setLoading(false);
@@ -81,7 +65,6 @@ export function WebForensicsConsole() {
     try {
       const result = await api.forensics(runId);
       setRun(result);
-      cache.set("lastRun", result);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -114,7 +97,6 @@ export function WebForensicsConsole() {
     try {
       const updated = await api.enrich(runId);
       setRun(updated);
-      cache.set("lastRun", updated);
       setEnrichMessage("Enrichment complete! Navigating to infrastructure view…");
       setTimeout(() => {
         navigate(`/infrastructure/${runId}`);

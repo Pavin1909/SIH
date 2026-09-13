@@ -7,3 +7,4 @@ export type InfrastructureObservation = { domain?: string; ip?: string; asn?: st
 export type BrowserObservation = { initial_url: string; final_url: string | null; redirect_chain: string[]; requests: Array<Record<string, unknown>>; domains: string[]; html: string; screenshot_available: boolean; dom_signals: Record<string, unknown>; javascript_signals: Record<string, unknown> };
 export type ForensicRun = { id: string; analysis_id: string; email_url_id: string; url: string; status: string; verdict: string; risk_score: number; fused_evidence: Record<string, unknown>; browser_observation: BrowserObservation | null; provider_observations: ProviderObservation[]; created_at: string };
 export type ForensicReport = { run_id: string; report_json: Record<string, unknown>; report_markdown: string };
+export type LatestInvestigation = { analysis: AnalysisWithEmail | null; forensic: ForensicRun | null };
