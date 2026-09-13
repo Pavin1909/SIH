@@ -2,20 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="popup.css">
-  <title>SandBoxTrace</title>
+  <title>ThreatTrace Web Security</title>
 </head>
 <body>
-  <main class="shell">
-    <header class="brand"><span class="brand-mark">S</span><div><p class="eyebrow">Gmail protection</p><h1>SandBoxTrace</h1></div><span id="connection" class="connection-dot" title="Backend status"></span></header>
-    <section id="status-card" class="status-card status-idle" aria-live="polite">
-      <div class="status-heading"><span id="status-icon" class="status-icon">•</span><div><p id="status" class="status-title">Ready to scan</p><p id="detail" class="status-detail">Open a Gmail message to start an automatic analysis.</p></div></div>
-      <dl class="facts"><div><dt>Verdict</dt><dd id="verdict">—</dd></div><div><dt>Risk</dt><dd id="risk">—</dd></div></dl>
+  <div class="popup-shell">
+    <!-- 1. Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-badge">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">THREATTRACE</span>
+          <span class="brand-subtitle">Web Security</span>
+        </div>
+      </div>
+      <div class="connection-status" id="connection-status" title="Connecting to backend…">
+        <span class="connection-dot" id="connection-dot"></span>
+        <span class="connection-label" id="connection-label">Checking</span>
+      </div>
+    </header>
+
+    <!-- 2. Current Page Inspection Card -->
+    <section class="page-card" id="page-card">
+      <div class="page-card-header">
+        <span class="eyebrow">Target Location</span>
+        <span class="domain-pill" id="page-domain">—</span>
+      </div>
+      <div class="page-title" id="page-title">Current Webpage</div>
+      <div class="page-url" id="page-url" title="">—</div>
     </section>
-    <div class="actions"><a id="investigation" class="primary" hidden target="_blank" rel="noreferrer">View investigation <span>↗</span></a><button id="options" class="secondary">Settings</button></div>
-    <p class="hint">Analysis starts automatically when you open a Gmail message. Use “Analyze again” on the Gmail banner to retry.</p>
-  </main>
+
+    <!-- 3. Primary Action / Scan Button -->
+    <div class="primary-action-wrap">
+      <button type="button" id="scan-btn" class="btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>Analyze This Page</span>
+      </button>
+    </div>
+
+    <!-- 4. Loading State -->
+    <section class="loading-panel" id="loading-panel" hidden>
+      <div class="spinner-wrap">
+        <div class="spinner"></div>
+      </div>
+      <div class="loading-title">Analyzing webpage...</div>
+      <div class="loading-stage" id="loading-stage">Submitting URL to sandbox…</div>
+    </section>
+
+    <!-- 5. Result Card -->
+    <section class="result-card result-idle" id="result-card">
+      <div class="result-header">
+        <div class="verdict-wrap">
+          <span class="verdict-icon" id="verdict-icon">•</span>
+          <div>
+            <div class="verdict-level" id="verdict-level">READY TO SCAN</div>
+            <div class="verdict-text" id="verdict-text">No active investigation</div>
+          </div>
+        </div>
+        <div class="risk-score-wrap" id="risk-score-wrap">
+          <span class="risk-score-label">Risk Score</span>
+          <span class="risk-score-val" id="risk-score-val">—</span>
+        </div>
+      </div>
+
+      <div class="result-findings" id="result-findings">
+        Click “Analyze This Page” to initiate sandbox forensics, DOM evaluation, and threat detection.
+      </div>
+
+      <div class="result-timestamp" id="result-timestamp"></div>
+
+      <!-- 6. Collapsible Technical Details -->
+      <details class="details-accordion" id="details-accordion">
+        <summary class="details-summary">
+          <span>Inspection Telemetry</span>
+          <span class="arrow">▾</span>
+        </summary>
+        <div class="details-content">
+          <div class="detail-row">
+            <span class="detail-label">AI / VLM Status:</span>
+            <span class="detail-val" id="telemetry-vlm">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Screenshot:</span>
+            <span class="detail-val" id="telemetry-screenshot">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Threat Feeds:</span>
+            <span class="detail-val" id="telemetry-intel">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Infrastructure:</span>
+            <span class="detail-val" id="telemetry-infra">—</span>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- 7. Error State -->
+    <section class="error-panel" id="error-panel" hidden>
+      <div class="error-icon">!</div>
+      <div class="error-title" id="error-title">Unable to connect to ThreatTrace</div>
+      <div class="error-detail" id="error-detail">Ensure the ThreatTrace FastAPI backend is running on http://localhost:8000.</div>
+      <button type="button" id="retry-btn" class="btn-retry">Retry Connection</button>
+    </section>
+
+    <!-- 8. Secondary Actions Bar -->
+    <footer class="footer-actions">
+      <a id="view-investigation-btn" class="btn-investigation" hidden target="_blank" rel="noreferrer">
+        <span>View Full Investigation</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </a>
+      <button type="button" id="options-btn" class="btn-options" title="Extension Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </footer>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>

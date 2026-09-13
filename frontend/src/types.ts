@@ -1,5 +1,5 @@
 export type UrlInfo = { id: string; url: string; domain: string };
-export type EmailInfo = { id: string; sender: string | null; recipients: string[]; subject: string | null; text_body: string; html_body: string | null; urls: UrlInfo[]; created_at: string };
+export type EmailInfo = { id: string; sender: string | null; recipients: string[]; subject: string | null; text_body: string; html_body: string | null; urls: UrlInfo[]; created_at: string; sha256?: string; headers?: Record<string, string | string[]>; raw_size?: number };
 export type Analysis = { id: string; email_id: string; model_name: string; label: string; phishing_probability: number | null; email_phishing_probability: number | null; url_phishing_probability: number; class_probabilities: Record<string, number>; confidence: number; created_at: string };
 export type AnalysisWithEmail = Analysis & { email: EmailInfo };
 export type ProviderObservation = { provider: string; status: string; response: Record<string, unknown> };

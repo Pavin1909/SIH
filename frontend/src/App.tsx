@@ -1,6 +1,12 @@
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { NavLink, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { ApiError, API_BASE_URL, api } from "./api";
+import { Dashboard } from "./components/dashboard/Dashboard";
+import { EmailAnalysisConsole } from "./components/analysis/EmailAnalysisConsole";
+import { AnalysisDetailsView } from "./components/analysis/AnalysisDetailsView";
+import { WebForensicsConsole } from "./components/forensics/WebForensicsConsole";
+import { AppShell } from "./components/shell/AppShell";
+import { Badge as UiBadge, EmptyState, ErrorState, LoadingState } from "./components/ui";
 import type { Analysis, AnalysisWithEmail, EmailInfo, ForensicReport, ForensicRun, InfrastructureObservation, ProviderObservation } from "./types";
 import { dateTime, percent, verdictTone } from "./utils";
 
@@ -10,22 +16,325 @@ function value(value: unknown) { return value === null || value === undefined ||
 function flag(value: unknown) { return typeof value === "boolean" ? (value ? "Yes" : "No") : unavailable; }
 function items(run: ForensicRun) { return Array.isArray(run.fused_evidence.infrastructure) ? run.fused_evidence.infrastructure as InfrastructureObservation[] : []; }
 function probability(analysis: Analysis) { return analysis.phishing_probability ?? analysis.email_phishing_probability ?? analysis.url_phishing_probability; }
-function Layout({ children }: { children: ReactNode }) { return <div className="min-h-screen"><header className="border-b border-slate-800 bg-slate-950/90"><div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4"><NavLink to="/" className="text-lg font-bold text-cyan-400">SandBoxTrace</NavLink><nav className="flex gap-1"><NavLink to="/" className="rounded-md px-3 py-2 text-sm text-slate-400 hover:text-white">Dashboard</NavLink><NavLink to="/email-analysis" className="rounded-md px-3 py-2 text-sm text-slate-400 hover:text-white">Email Analysis</NavLink></nav></div></header><main className="mx-auto max-w-6xl px-4 py-8">{children}</main></div>; }
-function State({ loading, error, empty, children }: { loading?: boolean; error?: unknown; empty?: boolean; children?: ReactNode }) { if (loading) return <div className="panel text-slate-300">Loading investigation data…</div>; if (error) return <div className="panel border-rose-900 text-rose-200">{error instanceof ApiError ? error.message : String(error || "Unable to load this data.")}</div>; if (empty) return <div className="panel text-slate-400">No investigation has been started yet.</div>; return <>{children}</>; }
-function Badge({ value }: { value: string }) { const tone = verdictTone(value); const styles = { safe: "bg-emerald-500/15 text-emerald-300", suspicious: "bg-amber-500/15 text-amber-300", malicious: "bg-rose-500/15 text-rose-300", neutral: "bg-slate-700 text-slate-300" }; return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${styles[tone]}`}>{value.replace(/_/g, " ")}</span>; }
-function Metric({ label, value: metricValue, hint }: { label: string; value: ReactNode; hint?: string }) { if (label === "Model confidence") return null; return <div className="panel"><p className="label">{label}</p><div className="mt-2 text-2xl font-semibold">{metricValue}</div>{hint && <p className="mt-2 text-xs text-slate-500">{hint}</p>}</div>; }
-function ProviderCard({ item }: { item: ProviderObservation }) { const response = item.response || {}; const error = response.error || response.detail || response.message; const errorText = error === null || error === undefined ? "" : String(error); return <div className="panel"><div className="flex items-center justify-between gap-3"><strong className="capitalize">{item.provider}</strong><Badge value={item.status} /></div>{errorText && <p className="mt-3 rounded-lg border border-amber-800/70 bg-amber-950/20 p-3 text-xs text-amber-200">{errorText}</p>}<details className="mt-3"><summary className="cursor-pointer text-xs text-slate-500">View provider response</summary><pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap text-xs text-slate-400">{JSON.stringify(response, null, 2)}</pre></details></div>; }
 
-function Dashboard() { const [health, setHealth] = useState("checking"); const analysis = cache.get<AnalysisWithEmail>("lastAnalysis"); const run = cache.get<ForensicRun>("lastRun"); useEffect(() => { api.health().then(() => setHealth("online")).catch(() => setHealth("offline")); }, []); return <section className="space-y-6"><div><p className="label">Phase 1–3 investigation console</p><h1 className="mt-2 text-3xl font-bold">Email threat intelligence</h1><p className="mt-2 max-w-2xl text-slate-400">Analyze messages, render linked webpages in the isolated browser, and review evidence like a SOC analyst.</p></div><div className="grid gap-4 sm:grid-cols-3"><Metric label="Backend" value={<Badge value={health} />} /><Metric label="Phishing probability" value={analysis ? percent(probability(analysis)) : "—"} hint="Uses the applicable email or URL model output." /><Metric label="Last verdict" value={run ? <Badge value={run.verdict} /> : "—"} /></div><div className="panel"><h2 className="font-semibold">Current investigation</h2>{analysis ? <div className="mt-3 space-y-2 text-sm text-slate-300"><p><span className="text-slate-500">Subject: </span>{analysis.email.subject || "(no subject)"}</p><p><span className="text-slate-500">Sender: </span>{analysis.email.sender || unavailable}</p><NavLink className="text-cyan-400" to={`/analyses/${analysis.id}`}>Open analysis details →</NavLink></div> : <NavLink className="button mt-3" to="/email-analysis">Analyze an .eml file</NavLink>}</div></section>; }
+function State({ loading, error, empty, children }: { loading?: boolean; error?: unknown; empty?: boolean; children?: ReactNode }) {
+  if (loading) return <LoadingState message="Loading investigation data…" />;
+  if (error) return <ErrorState message={error instanceof ApiError ? error.message : String(error || "Unable to load this data.")} />;
+  if (empty) return <EmptyState title="No investigation data" message="No investigation has been started yet." />;
+  return <>{children}</>;
+}
 
-function EmailAnalysis() { const navigate = useNavigate(); const [file, setFile] = useState<File | null>(null); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null); async function submit(event: FormEvent) { event.preventDefault(); if (!file) { setError("Choose an .eml file first."); return; } setLoading(true); setError(null); try { const result = await api.analyzeEmail(file); cache.set("lastAnalysis", result); navigate(`/analyses/${result.id}`); } catch (err) { setError(err instanceof Error ? err.message : "Upload failed"); } finally { setLoading(false); } } return <section className="mx-auto max-w-2xl space-y-6"><div><p className="label">Phase 1</p><h1 className="mt-2 text-3xl font-bold">Email analysis</h1><p className="mt-2 text-slate-400">The backend parses and classifies the original RFC 822 message.</p></div><form className="panel space-y-4" onSubmit={submit}><label className="block"><span className="label">RFC 822 message</span><input className="mt-2 block w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm" type="file" accept=".eml,message/rfc822" onChange={(event) => setFile(event.target.files?.[0] || null)} /></label>{error !== null && <p className="text-sm text-rose-300">{error}</p>}<button className="button" disabled={loading}>{loading ? "Analyzing…" : "Upload and analyze"}</button></form></section>; }
+function Badge({ value }: { value: string }) {
+  return <UiBadge value={value} />;
+}
 
-function AnalysisDetails() { const { analysisId = "" } = useParams(); const navigate = useNavigate(); const [analysis, setAnalysis] = useState<Analysis | null>(null); const [email, setEmail] = useState<EmailInfo | null>(null); const [error, setError] = useState<string | null>(null); const [loading, setLoading] = useState(true); const [running, setRunning] = useState<string | null>(null); const [stage, setStage] = useState(""); useEffect(() => { let active = true; (async () => { try { const detail = await api.analysis(analysisId); const saved = cache.get<AnalysisWithEmail>("lastAnalysis"); const message = saved?.id === detail.id ? saved.email : await api.email(detail.email_id); if (active) { setAnalysis(detail); setEmail(message); } } catch (err) { if (active) setError(err instanceof Error ? err.message : "Analysis could not be loaded."); } finally { if (active) setLoading(false); } })(); return () => { active = false; }; }, [analysisId]); async function inspect(urlId: string) { setRunning(urlId); setStage("Starting forensics…"); setError(null); try { setStage("Collecting webpage evidence…"); const run = await api.startForensics(analysisId, urlId); setStage("Forensics complete"); cache.set("lastRun", run); navigate(`/forensics/${run.id}`); } catch (err) { setStage(""); setError(err instanceof Error ? err.message : "Forensics failed. Check the backend logs."); } finally { setRunning(null); } } if (loading) return <State loading />; if (error !== null) return <State error={error} />; if (!analysis || !email) return <State empty />; return <section className="space-y-6"><div className="flex items-start justify-between gap-3"><div><p className="label">Phase 1 results</p><h1 className="mt-2 text-3xl font-bold">Analysis details</h1></div><Badge value={analysis.label} /></div><div className="grid gap-4 sm:grid-cols-3"><Metric label="Phishing probability" value={percent(probability(analysis))} hint={analysis.phishing_probability === null ? "URL phishing probability" : "Email phishing probability"} /><Metric label="Model confidence" value={percent(analysis.confidence)} /><Metric label="Created" value={<span className="text-sm">{dateTime(analysis.created_at)}</span>} /></div><div className="panel"><p className="label">Message</p><h2 className="mt-2 text-xl font-semibold">{email.subject || "(no subject)"}</h2><p className="mt-1 text-slate-400">{email.sender || unavailable}</p><p className="mt-4 whitespace-pre-wrap text-sm text-slate-300">{email.text_body || "No plaintext body"}</p></div><div className="panel"><p className="label">Phase 2 and 3</p><h2 className="mt-1 text-xl font-semibold">Webpage forensics</h2><p className="mt-2 text-sm text-slate-400">Playwright, VLM, threat intelligence, and live GeoIP analyze the selected URL.</p>{stage && <p className="mt-4 rounded-lg border border-cyan-800 bg-cyan-950/30 p-3 text-sm text-cyan-200">{stage}</p>}{error !== null && <p className="mt-4 rounded-lg border border-rose-800 bg-rose-950/30 p-3 text-sm text-rose-200">{error}</p>}<div className="mt-4 divide-y divide-slate-800">{email.urls.length ? email.urls.map((url) => <div className="flex flex-wrap items-center justify-between gap-3 py-3" key={url.id}><div className="min-w-0"><p className="truncate text-sm text-cyan-300" title={url.url}>{url.url}</p><p className="text-xs text-slate-500">{url.domain}</p></div><button className="button-secondary text-sm" disabled={running !== null} onClick={() => inspect(url.id)}>{running === url.id ? "Analyzing…" : "Run forensics"}</button></div>) : <p className="py-4 text-slate-400">No URLs were extracted from this message.</p>}</div></div></section>; }
+function Metric({ label, value: metricValue, hint }: { label: string; value: ReactNode; hint?: string }) {
+  if (label === "Model confidence") return null;
+  return (
+    <div className="panel">
+      <p className="label">{label}</p>
+      <div className="mt-2 text-2xl font-semibold text-slate-100">{metricValue}</div>
+      {hint && <p className="mt-2 text-xs text-slate-500">{hint}</p>}
+    </div>
+  );
+}
 
-function ForensicSummary({ run }: { run: ForensicRun }) { const vlm = run.provider_observations.find((item) => item.provider === "vlm"); const infra = items(run)[0]; const geoStatus = infra?.geoip_status || infra?.enrichment_status || infra?.status; const location = infra ? [infra.city, infra.region, infra.country].filter(Boolean).join(", ") : unavailable; const aiError = vlm?.response?.error || vlm?.response?.detail; return <><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Metric label="Verdict" value={<Badge value={run.verdict} />} /><Metric label="Risk score" value={`${run.risk_score}/100`} /><Metric label="AI / VLM" value={<Badge value={vlm?.status || unavailable} />} hint={aiError ? String(aiError) : vlm?.response?.model ? String(vlm.response.model) : undefined} /><Metric label="GeoIP" value={<Badge value={geoStatus || unavailable} />} /></div><div className="panel"><div className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4"><div><p className="label">IP</p><p>{value(infra?.ip)}</p></div><div><p className="label">Country / region / city</p><p>{location}</p></div><div><p className="label">ASN / ISP</p><p>{value(infra?.asn)} / {value(infra?.isp || infra?.asn_org)}</p></div><div><p className="label">VPN / TOR / source</p><p>{flag(infra?.vpn)} / {flag(infra?.tor)} / {value(infra?.source)}</p></div></div></div></>; }
-function Forensics() { const { runId = "" } = useParams(); const [run, setRun] = useState<ForensicRun | null>(cache.get<ForensicRun>("lastRun")); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); useEffect(() => { api.forensics(runId).then((result) => { setRun(result); cache.set("lastRun", result); }).catch((err) => setError(err instanceof Error ? err.message : "Forensics could not be loaded.")).finally(() => setLoading(false)); }, [runId]); return <State loading={loading} error={error} empty={!run}><section className="space-y-6"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="label">Phase 2 evidence fusion</p><h1 className="mt-2 text-3xl font-bold">Webpage forensics</h1><p className="mt-2 truncate text-slate-400" title={run!.url}>{run!.url}</p></div><Badge value={run!.status} /></div><ForensicSummary run={run!} /><div className="grid gap-4 lg:grid-cols-2"><div className="panel"><h2 className="font-semibold">Browser evidence</h2><div className="mt-4 grid gap-3 text-sm"><div><p className="label">Final URL</p><p className="break-all text-slate-300">{run!.browser_observation?.final_url || unavailable}</p></div><div><p className="label">Redirects</p><p className="text-slate-300">{run!.browser_observation?.redirect_chain?.length || 0} observed</p></div><div><p className="label">Domains / screenshot</p><p className="text-slate-300">{run!.browser_observation?.domains?.length || 0} domains · {run!.browser_observation?.screenshot_available ? "Captured" : unavailable}</p></div><div><p className="label">DOM indicators</p><pre className="mt-1 whitespace-pre-wrap text-xs text-slate-400">{JSON.stringify(run!.browser_observation?.dom_signals || {}, null, 2)}</pre></div><div><p className="label">JavaScript indicators</p><pre className="mt-1 whitespace-pre-wrap text-xs text-slate-400">{JSON.stringify(run!.browser_observation?.javascript_signals || {}, null, 2)}</pre></div></div></div><div className="panel"><h2 className="font-semibold">Evidence signals</h2><div className="mt-4 flex flex-wrap gap-2">{Array.isArray(run!.fused_evidence.signals) && run!.fused_evidence.signals.length ? (run!.fused_evidence.signals as unknown[]).map((signal) => <span className="rounded-full border border-cyan-800 bg-cyan-950/30 px-3 py-1 text-xs text-cyan-200" key={String(signal)}>{String(signal).replace(/_/g, " ")}</span>) : <span className="text-sm text-slate-500">No normalized signals returned.</span>}</div><details className="mt-5"><summary className="cursor-pointer text-xs text-slate-500">View complete fused evidence</summary><pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap text-xs text-slate-400">{JSON.stringify(run!.fused_evidence, null, 2)}</pre></details></div></div><div><div className="mb-3 flex items-center justify-between"><h2 className="text-xl font-semibold">Provider observations</h2><NavLink className="button-secondary text-sm" to={`/infrastructure/${run!.id}`}>Infrastructure intelligence</NavLink></div><div className="grid gap-4 lg:grid-cols-2">{run!.provider_observations.map((provider) => <ProviderCard key={provider.provider} item={provider} />)}</div></div></section></State>; }
+function ProviderCard({ item }: { item: ProviderObservation }) {
+  const response = item.response || {};
+  const error = response.error || response.detail || response.message;
+  const errorText = error === null || error === undefined ? "" : String(error);
+  return (
+    <div className="panel">
+      <div className="flex items-center justify-between gap-3">
+        <strong className="capitalize text-slate-200">{item.provider}</strong>
+        <Badge value={item.status} />
+      </div>
+      {errorText && (
+        <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 text-xs text-amber-200">
+          {errorText}
+        </p>
+      )}
+      <details className="mt-3">
+        <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-400">
+          View provider response
+        </summary>
+        <pre className="mt-3 max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-soc-950/80 p-3 text-xs text-slate-400 border border-soc-700/50">
+          {JSON.stringify(response, null, 2)}
+        </pre>
+      </details>
+    </div>
+  );
+}
 
-function InfrastructureCard({ item }: { item: InfrastructureObservation }) { const location = [item.city, item.region, item.country].filter(Boolean).join(", ") || unavailable; return <div className="panel"><div className="flex items-center justify-between gap-3"><strong>{value(item.domain || item.ip)}</strong><Badge value={String(item.geoip_status || item.enrichment_status || item.status || unavailable)} /></div><p className="mt-2 text-xs text-slate-500">Observed infrastructure location, not an attacker’s physical location.</p><dl className="mt-4 grid grid-cols-2 gap-4 text-sm"><div><dt className="label">IP</dt><dd>{value(item.ip)}</dd></div><div><dt className="label">Country / region / city</dt><dd>{location}</dd></div><div><dt className="label">ASN</dt><dd>{value(item.asn)}</dd></div><div><dt className="label">ISP / organization</dt><dd>{value(item.isp || item.asn_org)}</dd></div><div><dt className="label">VPN / TOR / proxy</dt><dd>{flag(item.vpn)} / {flag(item.tor)} / {flag(item.proxy)}</dd></div><div><dt className="label">Source/provider</dt><dd>{value(item.source)}</dd></div></dl></div>; }
-function Infrastructure() { const { runId = "" } = useParams(); const [run, setRun] = useState<ForensicRun | null>(null); const [report, setReport] = useState<ForensicReport | null>(null); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); useEffect(() => { (async () => { try { const result = await api.forensics(runId); setRun(result); try { setReport(await api.report(runId)); } catch { /* report may require API credentials */ } } catch (err) { setError(err instanceof Error ? err.message : "Infrastructure could not be loaded."); } finally { setLoading(false); } })(); }, [runId]); const observed = run ? items(run) : []; return <State loading={loading} error={error} empty={!run}><section className="space-y-6"><div><p className="label">Phase 3</p><h1 className="mt-2 text-3xl font-bold">Infrastructure intelligence</h1><p className="mt-2 text-slate-400">Live DNS, IP, GeoIP, provider, and correlation evidence.</p></div><div className="grid gap-4 md:grid-cols-2">{observed.length ? observed.map((item, index) => <InfrastructureCard item={item} key={`${item.ip || item.domain}-${index}`} />) : <div className="panel text-slate-400">No infrastructure observations were returned by live providers.</div>}</div><div className="panel"><h2 className="font-semibold">Forensic report</h2><pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap text-xs text-slate-400">{report ? report.report_markdown : "The report endpoint is unavailable or requires the configured API key."}</pre></div></section></State>; }
 
-export default function App() { return <Layout><Routes><Route path="/" element={<Dashboard />} /><Route path="/email-analysis" element={<EmailAnalysis />} /><Route path="/analyses/:analysisId" element={<AnalysisDetails />} /><Route path="/forensics/:runId" element={<Forensics />} /><Route path="/infrastructure/:runId" element={<Infrastructure />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes><footer className="mt-10 border-t border-slate-800 pt-4 text-xs text-slate-600">Backend API: {API_BASE_URL}</footer></Layout>; }
+
+
+
+
+function InfrastructureCard({ item }: { item: InfrastructureObservation }) {
+  const location = [item.city, item.region, item.country].filter(Boolean).join(", ") || unavailable;
+  return (
+    <div className="panel">
+      <div className="flex items-center justify-between gap-3">
+        <strong className="text-slate-200">{value(item.domain || item.ip)}</strong>
+        <Badge value={String(item.geoip_status || item.enrichment_status || item.status || unavailable)} />
+      </div>
+      <p className="mt-2 text-xs text-slate-500">Observed infrastructure location, not an attacker’s physical location.</p>
+      <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <dt className="label">IP</dt>
+          <dd className="text-slate-200">{value(item.ip)}</dd>
+        </div>
+        <div>
+          <dt className="label">Country / region / city</dt>
+          <dd className="text-slate-200">{location}</dd>
+        </div>
+        <div>
+          <dt className="label">ASN</dt>
+          <dd className="text-slate-200">{value(item.asn)}</dd>
+        </div>
+        <div>
+          <dt className="label">ISP / organization</dt>
+          <dd className="text-slate-200">{value(item.isp || item.asn_org)}</dd>
+        </div>
+        <div>
+          <dt className="label">VPN / TOR / proxy</dt>
+          <dd className="text-slate-200">{flag(item.vpn)} / {flag(item.tor)} / {flag(item.proxy)}</dd>
+        </div>
+        <div>
+          <dt className="label">Source/provider</dt>
+          <dd className="text-slate-200">{value(item.source)}</dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
+function Infrastructure() {
+  const { runId = "" } = useParams();
+  const [run, setRun] = useState<ForensicRun | null>(null);
+  const [report, setReport] = useState<ForensicReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const result = await api.forensics(runId);
+        setRun(result);
+        try {
+          setReport(await api.report(runId));
+        } catch {
+          /* report may require API credentials */
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Infrastructure could not be loaded.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [runId]);
+
+  const observed = run ? items(run) : [];
+
+  return (
+    <State loading={loading} error={error} empty={!run}>
+      <section className="space-y-6">
+        <div>
+          <p className="label">Phase 3</p>
+          <h1 className="mt-2 text-3xl font-bold text-slate-100">Infrastructure intelligence</h1>
+          <p className="mt-2 text-slate-400">Live DNS, IP, GeoIP, provider, and correlation evidence.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {observed.length ? (
+            observed.map((item, index) => (
+              <InfrastructureCard item={item} key={`${item.ip || item.domain}-${index}`} />
+            ))
+          ) : (
+            <div className="panel text-slate-400">No infrastructure observations were returned by live providers.</div>
+          )}
+        </div>
+        <div className="panel">
+          <h2 className="font-semibold text-slate-100">Forensic report</h2>
+          <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-lg bg-soc-950 p-4 text-xs text-slate-400 border border-soc-700/50">
+            {report ? report.report_markdown : "The report endpoint is unavailable or requires the configured API key."}
+          </pre>
+        </div>
+      </section>
+    </State>
+  );
+}
+
+/* Entry point handlers for shell navigation */
+function ForensicsEntry() {
+  const lastRun = cache.get<ForensicRun>("lastRun");
+  if (lastRun?.id) {
+    return <Navigate to={`/forensics/${lastRun.id}`} replace />;
+  }
+  return (
+    <div className="py-6">
+      <EmptyState
+        title="No active investigation"
+        message="Start an email analysis to begin a webpage forensic investigation."
+        action={
+          <NavLink className="button" to="/email-analysis">
+            Start Analysis
+          </NavLink>
+        }
+      />
+    </div>
+  );
+}
+
+function InfrastructureEntry() {
+  const lastRun = cache.get<ForensicRun>("lastRun");
+  if (lastRun?.id) {
+    return <Navigate to={`/infrastructure/${lastRun.id}`} replace />;
+  }
+  return (
+    <div className="py-6">
+      <EmptyState
+        title="No active infrastructure investigation"
+        message="Start an email analysis and inspect a target URL to observe infrastructure intelligence."
+        action={
+          <NavLink className="button" to="/email-analysis">
+            Start Analysis
+          </NavLink>
+        }
+      />
+    </div>
+  );
+}
+
+function ReportsView() {
+  const lastRun = cache.get<ForensicRun>("lastRun");
+  return (
+    <section className="space-y-6">
+      <div>
+        <p className="label">Reporting</p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-100">Threat Reports</h1>
+        <p className="mt-2 text-slate-400">
+          Forensic evidence summaries generated from fused email, DOM, VLM, and infrastructure intelligence.
+        </p>
+      </div>
+      {lastRun?.id ? (
+        <div className="panel space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-slate-100">Latest Investigation Report</h2>
+              <p className="text-xs text-slate-400 mt-1 font-mono">{lastRun.url}</p>
+            </div>
+            <Badge value={lastRun.verdict} />
+          </div>
+          <div className="pt-2">
+            <NavLink className="button-secondary text-xs" to={`/infrastructure/${lastRun.id}`}>
+              View Forensic Report Details →
+            </NavLink>
+          </div>
+        </div>
+      ) : (
+        <EmptyState
+          title="No reports generated"
+          message="Forensic reports are automatically generated upon completion of an investigation run."
+          action={
+            <NavLink className="button" to="/email-analysis">
+              Analyze an Email
+            </NavLink>
+          }
+        />
+      )}
+    </section>
+  );
+}
+
+function SettingsView() {
+  const [health, setHealth] = useState("checking");
+  const lastAnalysis = cache.get<AnalysisWithEmail>("lastAnalysis");
+  const lastRun = cache.get<ForensicRun>("lastRun");
+
+  useEffect(() => {
+    api
+      .health()
+      .then((res) => setHealth(res?.status || "online"))
+      .catch(() => setHealth("offline"));
+  }, []);
+
+  function clearCache() {
+    localStorage.removeItem("lastAnalysis");
+    localStorage.removeItem("lastRun");
+    window.location.reload();
+  }
+
+  return (
+    <section className="space-y-6">
+      <div>
+        <p className="label">System</p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-100">Settings</h1>
+        <p className="mt-2 text-slate-400">Platform configuration and backend connectivity.</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="panel space-y-3">
+          <h2 className="text-base font-semibold text-slate-100">Backend Connection</h2>
+          <div className="text-sm space-y-2.5">
+            <div className="flex items-center justify-between border-b border-soc-700/60 pb-2.5">
+              <span className="text-slate-400">API Endpoint</span>
+              <span className="font-mono text-xs text-cyan-400">{API_BASE_URL}</span>
+            </div>
+            <div className="flex items-center justify-between border-b border-soc-700/60 pb-2.5">
+              <span className="text-slate-400">Health Status</span>
+              <Badge value={health} />
+            </div>
+            <div className="flex items-center justify-between pt-0.5">
+              <span className="text-slate-400">Mode</span>
+              <span className="font-mono text-xs text-slate-300">{import.meta.env.MODE || "production"}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel space-y-3">
+          <h2 className="text-base font-semibold text-slate-100">Investigation Cache</h2>
+          <div className="text-sm space-y-2.5">
+            <div className="flex items-center justify-between border-b border-soc-700/60 pb-2.5">
+              <span className="text-slate-400">Cached Analysis</span>
+              <span className="font-mono text-xs text-slate-300">{lastAnalysis ? lastAnalysis.id.slice(0, 12) + "…" : "None"}</span>
+            </div>
+            <div className="flex items-center justify-between border-b border-soc-700/60 pb-2.5">
+              <span className="text-slate-400">Cached Forensic Run</span>
+              <span className="font-mono text-xs text-slate-300">{lastRun ? lastRun.id.slice(0, 12) + "…" : "None"}</span>
+            </div>
+          </div>
+          <div className="pt-2">
+            <button onClick={clearCache} className="button-secondary text-xs">
+              Clear Investigation Cache
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function App() {
+  return (
+    <AppShell>
+      <Routes>
+        {/* Existing core routes */}
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/email-analysis" element={<EmailAnalysisConsole />} />
+        <Route path="/analyses/:analysisId" element={<AnalysisDetailsView />} />
+        <Route path="/forensics/:runId" element={<WebForensicsConsole />} />
+        <Route path="/infrastructure/:runId" element={<Infrastructure />} />
+
+        {/* Shell entry routes */}
+        <Route path="/forensics" element={<ForensicsEntry />} />
+        <Route path="/infrastructure" element={<InfrastructureEntry />} />
+        <Route path="/reports" element={<ReportsView />} />
+        <Route path="/settings" element={<SettingsView />} />
+
+        {/* Fallback route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AppShell>
+  );
+}
+
