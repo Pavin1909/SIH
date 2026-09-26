@@ -120,7 +120,18 @@ async def health() -> dict[str, str]:
 async def render(request: RenderRequest) -> dict:
     try:
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
+            # Some tracking/redirect endpoints (notably SendGrid links) fail
+            # Chromium's HTTP/2 negotiation inside the container with
+            # ERR_HTTP2_PROTOCOL_ERROR. Falling back to HTTP/1.1 keeps the
+            # isolated browser usable while preserving the forensic capture.
+            browser = await playwright.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-http2",
+                ],
+            )
             try:
                 return await asyncio.wait_for(collect_page(browser, request), timeout=request.timeout_ms / 1000 + 5)
             finally:

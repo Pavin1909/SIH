@@ -1,9 +1,9 @@
 import { ComponentType, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { IconProps } from "../icons";
-import { GlassTooltip } from "../ui/GlassTooltip";
 
 export interface SidebarItemProps {
+  number: string;
   name: string;
   path: string;
   category: string;
@@ -14,6 +14,7 @@ export interface SidebarItemProps {
 }
 
 export function SidebarItem({
+  number,
   name,
   path,
   category,
@@ -26,7 +27,7 @@ export function SidebarItem({
 
   return (
     <div
-      className="relative flex items-center justify-center"
+      className="relative flex items-center justify-center w-full"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -35,34 +36,56 @@ export function SidebarItem({
         onClick={onNavigate}
         onFocus={() => setHovered(true)}
         onBlur={() => setHovered(false)}
-        aria-label={name}
-        title={name}
-        className={`group relative flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${
+        aria-label={`${number} ${name}`}
+        title={`${number} ${name}`}
+        className={`group relative flex flex-col items-center justify-center w-12 py-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-[#c8a96e]/60 ${
           isActive
-            ? "border border-cyan-400/60 bg-cyan-500/20 text-cyan-300 shadow-[0_0_16px_rgba(6,182,212,0.35)]"
-            : "border border-transparent text-slate-400 hover:border-white/[0.08] hover:bg-white/[0.06] hover:text-cyan-300"
+            ? "border border-[#c8a96e]/60 bg-gradient-to-b from-[#352549] to-[#20162e] text-[#f5ebd9] shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
+            : "border border-transparent text-[#a498b2] hover:border-[#c8a96e]/25 hover:bg-[#1a1324] hover:text-[#dfc28d]"
         }`}
       >
-        {/* Active glowing indicator bar on the left edge */}
+        {/* Active chapter bookmark gold trim on the left edge */}
         {isActive && (
-          <span className="absolute -left-2 top-2 bottom-2 w-1 rounded-r-full bg-cyan-400 shadow-[0_0_10px_#06b6d4]" />
+          <span className="absolute -left-1.5 top-1.5 bottom-1.5 w-1 rounded-r bg-gradient-to-b from-[#dfc28d] to-[#c8a96e] shadow-[0_0_8px_rgba(200,169,110,0.4)]" />
         )}
+
+        {/* Small serif chapter number */}
+        <span
+          className={`font-serif text-[9px] tracking-wider transition-colors ${
+            isActive ? "text-[#dfc28d] font-bold" : "text-[#7a6f87] group-hover:text-[#c8a96e]"
+          }`}
+        >
+          {number}
+        </span>
+
+        {/* Icon */}
         <Icon
-          size={20}
-          className={`transition-transform duration-200 ${
-            isActive ? "scale-105 text-cyan-300" : "group-hover:scale-110"
+          size={18}
+          className={`mt-0.5 transition-transform duration-200 ${
+            isActive ? "scale-105 text-[#f5ebd9]" : "group-hover:scale-105"
           }`}
         />
       </NavLink>
 
-      {/* Floating Glass Tooltip on Hover */}
-      <GlassTooltip
-        category={category}
-        title={name}
-        description={description}
-        icon={<Icon size={18} />}
-        visible={hovered}
-      />
+      {/* Floating Codex Chapter Card on Hover (Desktop) */}
+      {hovered && (
+        <div className="hidden lg:block absolute left-16 z-50 w-56 rounded-lg border border-[#c8a96e]/40 bg-[#1a1324]/95 p-3 shadow-[0_12px_35px_rgba(0,0,0,0.7)] backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between border-b border-[#c8a96e]/15 pb-1.5">
+            <span className="font-serif text-[9px] font-bold tracking-widest text-[#c8a96e] uppercase">
+              CHAPTER {number}
+            </span>
+            <span className="font-serif text-[9px] text-[#8d809c] uppercase">
+              {category}
+            </span>
+          </div>
+          <div className="mt-1.5 font-serif text-sm font-bold tracking-wide text-[#f5ebd9]">
+            {name}
+          </div>
+          <p className="mt-1 text-[11px] text-[#a498b2] leading-relaxed">
+            {description}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

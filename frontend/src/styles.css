@@ -4,48 +4,163 @@
 
 @layer base {
   body {
-    @apply min-h-screen bg-[#080c14] text-slate-100 antialiased selection:bg-cyan-500/20 selection:text-cyan-200;
+    @apply min-h-screen bg-[#0e0b14] text-[#e8e1d5] antialiased selection:bg-[#c8a96e]/25 selection:text-[#dfc28d];
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
   }
+  
+  h1, h2, h3, .font-serif-title {
+    font-family: "Cinzel", "Cormorant Garamond", Georgia, serif;
+    letter-spacing: 0.03em;
+  }
+
   button, input, select, textarea {
     font: inherit;
   }
 
-  /* Futuristic Enterprise custom scrollbar */
+  /* Archival Codex custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: #100d14;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(30, 41, 69, 0.7);
+    background: #362947;
+    border: 1px solid rgba(200, 169, 110, 0.2);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(56, 189, 248, 0.35);
+    background: #523f6b;
+    border-color: rgba(200, 169, 110, 0.45);
   }
 }
 
 @layer components {
-  /* Futuristic Glassmorphic Panel */
+  /* Fantasy Codex Archival Panel */
   .panel {
-    @apply rounded-2xl border border-white/[0.08] bg-[#0c1527]/60 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.37)] backdrop-blur-xl transition-all;
+    @apply relative rounded-xl border border-[#c8a96e]/25 bg-[#161122]/85 p-5 shadow-[0_10px_35px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-all;
   }
   .panel-elevated {
-    @apply rounded-2xl border border-cyan-500/25 bg-[#0f1a30]/75 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl;
+    @apply relative rounded-xl border border-[#dfc28d]/35 bg-[#1d162d]/90 p-5 shadow-[0_16px_45px_rgba(0,0,0,0.65)] backdrop-blur-2xl;
   }
+  
+  /* Codex Primary Button: Rich plum with antique-gold border & serif typography */
   .button {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all hover:from-cyan-400 hover:to-cyan-300 hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] focus:outline-none focus:ring-2 focus:ring-cyan-400/40 focus:ring-offset-2 focus:ring-offset-[#080c14] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-[#c8a96e]/50 bg-gradient-to-b from-[#2e2345] to-[#1c152a] px-4 py-2 font-serif text-xs font-bold tracking-wider text-[#f5ebd9] shadow-[0_4px_16px_rgba(0,0,0,0.4)] transition-all hover:border-[#dfc28d] hover:bg-gradient-to-b hover:from-[#3a2c56] hover:to-[#221a34] hover:text-white hover:shadow-[0_6px_20px_rgba(200,169,110,0.15)] focus:outline-none focus:ring-2 focus:ring-[#c8a96e]/40 focus:ring-offset-2 focus:ring-offset-[#0e0b14] disabled:cursor-not-allowed disabled:opacity-40;
   }
+  
+  /* Codex Secondary Button: Subdued velvet with refined brass trim */
   .button-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] backdrop-blur-md px-4 py-2 text-sm font-medium text-slate-200 transition-all hover:border-cyan-500/30 hover:bg-white/[0.08] hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-500/30 focus:ring-offset-2 focus:ring-offset-[#080c14] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-[#c8a96e]/25 bg-[#1c152a]/70 px-4 py-2 font-serif text-xs font-semibold tracking-wider text-[#d5cbbd] backdrop-blur-md transition-all hover:border-[#c8a96e]/50 hover:bg-[#251b36] hover:text-[#f5ebd9] focus:outline-none focus:ring-2 focus:ring-[#c8a96e]/30 focus:ring-offset-2 focus:ring-offset-[#0e0b14] disabled:cursor-not-allowed disabled:opacity-40;
   }
+  
+  /* Archival Section Label */
   .label {
-    @apply text-[11px] font-semibold uppercase tracking-wider text-slate-400;
+    @apply font-serif text-[11px] font-semibold uppercase tracking-widest text-[#a498b2];
   }
+  
+  /* Archival Input Field */
   .soc-input {
-    @apply w-full rounded-xl border border-white/[0.08] bg-[#0c1527]/70 px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 backdrop-blur-md transition-all focus:border-cyan-500/60 focus:bg-[#0c1527]/90 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply w-full rounded-lg border border-[#c8a96e]/25 bg-[#140e1e]/80 px-3.5 py-2 text-sm text-[#e8e1d5] placeholder-[#7a6f87] backdrop-blur-md transition-all focus:border-[#dfc28d]/60 focus:bg-[#191225] focus:outline-none focus:ring-2 focus:ring-[#c8a96e]/20 disabled:cursor-not-allowed disabled:opacity-40;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Leaflet popup & map overrides for Threat Atlas
+   ═══════════════════════════════════════════════════════════════════════ */
+.leaflet-popup-content-wrapper {
+  background: rgba(22, 17, 34, 0.95) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(200, 169, 110, 0.35) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7) !important;
+  color: #e8e1d5 !important;
+}
+.leaflet-popup-tip {
+  background: rgba(22, 17, 34, 0.95) !important;
+  border: 1px solid rgba(200, 169, 110, 0.35) !important;
+  box-shadow: none !important;
+}
+.leaflet-popup-close-button {
+  color: #c8a96e !important;
+}
+.leaflet-popup-close-button:hover {
+  color: #dfc28d !important;
+}
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+/* Threat Atlas Cartographic Map Tone (Rich Antique Contrast) */
+.threat-atlas-tiles {
+  filter: contrast(1.1) brightness(0.72) saturate(0.85);
+}
+
+/* Archival Cartographic Map Pin (Solid Brass Ring + Wine/Crimson Core) */
+.soc-geo-marker {
+  background: transparent !important;
+  border: none !important;
+}
+.cartographic-pin-container {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.cartographic-pin-outer {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #dfc28d;
+  background: rgba(200, 169, 110, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+.cartographic-pin-core {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8c2535;
+  border: 1.5px solid #dfc28d;
+  box-shadow: 0 0 6px rgba(140, 37, 53, 0.8);
+}
+
+/* Threat Atlas Trajectory Polyline (Archival Crimson Thread) */
+path.leaflet-interactive[stroke="#8c2535"],
+path.leaflet-interactive[stroke="#ef4444"] {
+  stroke: #8c2535 !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Codex Archival Corner Flourishes & Framing Helpers
+   ═══════════════════════════════════════════════════════════════════════ */
+.codex-frame {
+  position: relative;
+}
+.codex-frame::before {
+  content: "❖";
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 8px;
+  color: #c8a96e;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.codex-frame::after {
+  content: "❖";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 8px;
+  color: #c8a96e;
+  opacity: 0.6;
+  pointer-events: none;
 }

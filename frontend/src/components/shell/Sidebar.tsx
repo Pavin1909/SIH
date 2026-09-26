@@ -1,13 +1,11 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  ChevronsRight,
   FileText,
   Globe,
   Home,
   Mail,
   Server,
   Settings as SettingsIcon,
-  Shield,
   X,
 } from "../icons";
 import { SidebarItem } from "./SidebarItem";
@@ -17,7 +15,8 @@ export interface SidebarProps {
   onClose: () => void;
 }
 
-interface NavDefinition {
+export interface NavDefinition {
+  number: string;
   name: string;
   path: string;
   category: string;
@@ -28,50 +27,56 @@ interface NavDefinition {
 
 export const NAVIGATION_ITEMS: NavDefinition[] = [
   {
-    name: "Dashboard",
+    number: "01",
+    name: "The Archive",
     path: "/",
     category: "Overview",
-    description: "Real-time SOC telemetry & overview",
+    description: "Real-time threat ledger & investigative overview",
     icon: Home,
     isActive: (p) => p === "/",
   },
   {
-    name: "Email Analysis",
+    number: "02",
+    name: "Email Cases",
     path: "/email-analysis",
-    category: "Analysis",
-    description: "RFC 822 parsing & AI phishing detection",
+    category: "Case Files",
+    description: "Deposit correspondence for forensic examination",
     icon: Mail,
     isActive: (p) => p === "/email-analysis" || p.startsWith("/analyses/"),
   },
   {
-    name: "Web Forensics",
+    number: "03",
+    name: "Domain Dossiers",
     path: "/forensics",
     category: "Investigation",
-    description: "Browser sandbox, DOM signals & VLM",
+    description: "Specimen inspection, behavioral & visual analysis",
     icon: Globe,
     isActive: (p) => p.startsWith("/forensics"),
   },
   {
-    name: "Infrastructure",
+    number: "04",
+    name: "Threat Atlas",
     path: "/infrastructure",
-    category: "Investigation",
-    description: "Live DNS, GeoIP, ASN & provider intel",
+    category: "Cartography",
+    description: "Geospatial threat registry, DNS, and IP intelligence",
     icon: Server,
     isActive: (p) => p.startsWith("/infrastructure"),
   },
   {
-    name: "Reports",
+    number: "05",
+    name: "Case Reports",
     path: "/reports",
-    category: "Reporting",
-    description: "Forensic evidence & case summaries",
+    category: "Archives",
+    description: "Classified case ledger & forensic intelligence dossiers",
     icon: FileText,
     isActive: (p) => p.startsWith("/reports"),
   },
   {
-    name: "Settings",
+    number: "06",
+    name: "Atelier & System",
     path: "/settings",
     category: "System",
-    description: "Platform config & API telemetry",
+    description: "Atelier configuration & backend connectivity",
     icon: SettingsIcon,
     isActive: (p) => p.startsWith("/settings"),
   },
@@ -84,124 +89,115 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* =========================================================================
-          DESKTOP & TABLET: Narrow Vertical Glass Rail (Icon-Only Default State)
+          DESKTOP: Narrow Vertical Codex Rail (Chapter Number + Icon)
           ========================================================================= */}
       <aside
-        aria-label="Sidebar Navigation"
-        className="hidden lg:flex fixed left-4 top-20 bottom-6 z-40 w-14 flex-col items-center justify-between rounded-2xl border border-white/[0.08] bg-[#0a1223]/70 p-2 py-3 shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all"
+        aria-label="Codex Navigation Rail"
+        className="hidden lg:flex fixed left-4 top-20 bottom-6 z-40 w-16 flex-col items-center justify-between rounded-xl border border-[#c8a96e]/25 bg-[#140e1e]/90 p-2 py-4 shadow-[0_12px_40px_rgba(0,0,0,0.65)] backdrop-blur-2xl transition-all"
       >
-        {/* Navigation Items (Icon-first) */}
-        <nav className="flex flex-col items-center gap-3 w-full">
-          {NAVIGATION_ITEMS.map((item) => (
-            <SidebarItem
-              key={item.path}
-              name={item.name}
-              path={item.path}
-              category={item.category}
-              description={item.description}
-              icon={item.icon}
-              isActive={item.isActive(currentPath)}
-            />
+        {/* Top Flourish */}
+        <div className="font-serif text-[10px] text-[#c8a96e]/50 select-none">
+          ❖
+        </div>
+
+        {/* Chapter Items */}
+        <nav className="flex flex-col items-center gap-2.5 w-full my-auto">
+          {NAVIGATION_ITEMS.map((item, idx) => (
+            <div key={item.path} className="w-full flex flex-col items-center">
+              <SidebarItem
+                number={item.number}
+                name={item.name}
+                path={item.path}
+                category={item.category}
+                description={item.description}
+                icon={item.icon}
+                isActive={item.isActive(currentPath)}
+              />
+              {idx < NAVIGATION_ITEMS.length - 1 && (
+                <div className="my-1 h-[1px] w-6 bg-[#c8a96e]/15" />
+              )}
+            </div>
           ))}
         </nav>
 
-        {/* Rail Footer Action (Expand/Action icon from reference design) */}
-        <div className="flex flex-col items-center pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            title="Expand Navigation Drawer"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 hover:border-white/10 hover:bg-white/[0.06] hover:text-cyan-300 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
-          >
-            <ChevronsRight size={18} />
-          </button>
+        {/* Bottom Flourish */}
+        <div className="font-serif text-[10px] text-[#c8a96e]/50 select-none">
+          ❖
         </div>
       </aside>
 
       {/* =========================================================================
-          MOBILE: Glass Navigation Drawer (Opened via mobile hamburger button)
+          MOBILE / TABLET: Slide-Out Chapter Drawer
           ========================================================================= */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-[#080c14]/80 backdrop-blur-md lg:hidden"
-          onClick={onClose}
-        >
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
           <div
-            className="fixed inset-y-0 left-0 w-72 border-r border-white/[0.08] bg-[#0a1223]/95 p-5 shadow-2xl backdrop-blur-2xl flex flex-col justify-between animate-in slide-in-from-left duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div>
-              {/* Mobile Drawer Header */}
-              <div className="flex items-center justify-between pb-5 border-b border-white/[0.08]">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-500/15 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                    <Shield size={20} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold tracking-wider text-slate-100">
-                      THREATTRACE
-                    </div>
-                    <div className="text-[10px] font-semibold tracking-wider text-cyan-400">
-                      AI Security Intelligence
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white"
-                  aria-label="Close menu"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+            className="fixed inset-0 bg-[#0e0b14]/80 backdrop-blur-sm"
+            onClick={onClose}
+            aria-hidden="true"
+          />
 
-              {/* Mobile Links with Names & Categories */}
-              <nav className="mt-5 space-y-1.5">
-                {NAVIGATION_ITEMS.map((item) => {
-                  const active = item.isActive(currentPath);
-                  const Icon = item.icon;
-                  return (
-                    <NavLink
-                      key={item.path}
-                      to={item.path}
-                      onClick={onClose}
-                      className={`flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-medium transition-all ${
-                        active
-                          ? "border border-cyan-400/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.25)]"
-                          : "border border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-slate-200"
-                      }`}
-                    >
-                      <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                          active
-                            ? "bg-cyan-500/20 text-cyan-300"
-                            : "bg-white/[0.04] text-slate-400"
-                        }`}
-                      >
-                        <Icon size={18} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[10px] uppercase font-semibold text-slate-500 tracking-wider">
-                          {item.category}
-                        </div>
-                        <div className="text-sm font-semibold text-slate-200">
-                          {item.name}
-                        </div>
-                      </div>
-                      {active && (
-                        <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
-                      )}
-                    </NavLink>
-                  );
-                })}
-              </nav>
+          {/* Drawer Folio */}
+          <div className="fixed inset-y-0 left-0 flex w-72 flex-col border-r border-[#c8a96e]/30 bg-[#161122] p-5 shadow-2xl animate-in slide-in-from-left duration-200">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between border-b border-[#c8a96e]/20 pb-4">
+              <div className="space-y-0.5">
+                <div className="font-serif text-sm font-bold tracking-wider text-[#dfc28d]">
+                  ZENTRA CODEX
+                </div>
+                <div className="font-serif text-[10px] tracking-widest text-[#a498b2] uppercase">
+                  Investigation Chapters
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded p-1 text-[#a498b2] hover:text-[#dfc28d] transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            {/* Mobile Footer */}
-            <div className="pt-4 border-t border-white/[0.08] text-xs text-slate-500">
-              <span className="font-semibold text-slate-400">ThreatTrace</span>{" "}
-              Console v1.0
+            {/* Navigation List */}
+            <nav className="mt-4 flex flex-1 flex-col gap-1.5 overflow-y-auto">
+              {NAVIGATION_ITEMS.map((item) => {
+                const active = item.isActive(currentPath);
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={onClose}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${
+                      active
+                        ? "border border-[#c8a96e]/40 bg-[#251b36] text-[#f5ebd9] shadow-sm"
+                        : "text-[#a498b2] hover:bg-[#1a1324] hover:text-[#dfc28d]"
+                    }`}
+                  >
+                    <span className="font-serif text-xs font-bold text-[#c8a96e]">
+                      {item.number}
+                    </span>
+                    <Icon size={16} className={active ? "text-[#dfc28d]" : ""} />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-serif text-xs font-bold tracking-wide">
+                        {item.name}
+                      </div>
+                      <div className="text-[10px] text-[#8d809c] truncate">
+                        {item.description}
+                      </div>
+                    </div>
+                  </NavLink>
+                );
+              })}
+            </nav>
+
+            {/* Drawer Footer */}
+            <div className="border-t border-[#c8a96e]/15 pt-3 text-center">
+              <span className="font-serif text-[10px] tracking-widest text-[#8d809c] uppercase">
+                Investigation Atelier • Active
+              </span>
             </div>
           </div>
         </div>

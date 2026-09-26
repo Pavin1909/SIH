@@ -48,6 +48,8 @@ services:
         condition: service_healthy
       ollama:
         condition: service_healthy
+      ollama-model:
+        condition: service_completed_successfully
 
   ollama:
     image: ollama/ollama:latest
@@ -60,6 +62,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+
+  ollama-model:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      SANDBOXTRACE_VLM_MODEL: ${SANDBOXTRACE_VLM_MODEL:-qwen2.5vl:7b}
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ollama pull \"$${SANDBOXTRACE_VLM_MODEL}\""]
 
   neo4j:
     image: neo4j:5.26-community
@@ -97,6 +110,7 @@ services:
       context: ./frontend
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+        VITE_TOMTOM_API_KEY: ${VITE_TOMTOM_API_KEY:-}
     ports:
       - "3000:80"
     depends_on:

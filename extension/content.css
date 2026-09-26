@@ -1,8 +1,282 @@
-#sandboxtrace-gmail-banner { position: fixed; z-index: 2147483647; top: 16px; right: 20px; width: min(420px, calc(100vw - 40px)); display: grid; gap: 7px; padding: 15px 17px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; color: #fff; font: 14px/1.45 Arial, sans-serif; box-shadow: 0 12px 38px rgba(0,0,0,.34); backdrop-filter: blur(12px); animation: sandboxtrace-in .2s ease-out; }
-#sandboxtrace-gmail-banner strong { font-size: 15px; } #sandboxtrace-gmail-banner a { color: inherit; font-weight: 700; text-decoration: underline; }
-#sandboxtrace-gmail-banner button { width: fit-content; border: 1px solid rgba(255,255,255,.55); border-radius: 5px; padding: 5px 8px; background: rgba(0,0,0,.2); color: #fff; cursor: pointer; }
-.sandboxtrace-scanning { background: linear-gradient(135deg, #155e75ee, #164e63ee); } .sandboxtrace-suspicious { background: linear-gradient(135deg, #92400eee, #78350fee); } .sandboxtrace-malicious, .sandboxtrace-error { background: linear-gradient(135deg, #991b1bee, #7f1d1dee); }
-.sandboxtrace-safe { background: linear-gradient(135deg, #166534ee, #14532dee); }
-.sandboxtrace-scanning::before { content: ""; width: 8px; height: 8px; margin-right: 2px; border-radius: 50%; background: #67e8f9; box-shadow: 0 0 0 5px #67e8f933; animation: sandboxtrace-pulse 1.2s infinite; }
-@keyframes sandboxtrace-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes sandboxtrace-pulse { 50% { opacity: .35; transform: scale(.75); } }
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+#sandboxtrace-gmail-banner {
+  position: fixed;
+  z-index: 2147483647;
+  top: 20px;
+  right: 24px;
+  width: min(440px, calc(100vw - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  color: #e8e1d5;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  line-height: 1.45;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(223, 194, 141, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: sandboxtrace-in .25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+/* Archival Smoky Plum Backgrounds by Verdict */
+.sandboxtrace-banner {
+  background: linear-gradient(145deg, rgba(22, 17, 34, 0.97) 0%, rgba(14, 11, 20, 0.99) 100%);
+  border: 1px solid rgba(200, 169, 110, 0.35);
+}
+
+.sandboxtrace-safe {
+  border-color: rgba(85, 143, 112, 0.55);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(85, 143, 112, 0.15), inset 0 0 0 1px rgba(168, 230, 207, 0.1);
+}
+
+.sandboxtrace-suspicious {
+  border-color: rgba(226, 165, 84, 0.55);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(226, 165, 84, 0.15), inset 0 0 0 1px rgba(255, 209, 128, 0.1);
+}
+
+.sandboxtrace-malicious, .sandboxtrace-error {
+  border-color: rgba(180, 56, 77, 0.6);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(180, 56, 77, 0.2), inset 0 0 0 1px rgba(255, 138, 154, 0.1);
+}
+
+.sandboxtrace-scanning {
+  border-color: rgba(200, 169, 110, 0.45);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 24px rgba(200, 169, 110, 0.15), inset 0 0 0 1px rgba(223, 194, 141, 0.12);
+}
+
+/* Corner Flourishes ❖ */
+.sandboxtrace-flourish {
+  position: absolute;
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  color: #c8a96e;
+  opacity: 0.6;
+  pointer-events: none;
+}
+.sandboxtrace-flourish-tl { top: 6px; left: 8px; }
+.sandboxtrace-flourish-tr { top: 6px; right: 8px; }
+
+/* Header Bar */
+.sandboxtrace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(200, 169, 110, 0.18);
+  padding-bottom: 8px;
+}
+
+.sandboxtrace-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sandboxtrace-crest {
+  color: #dfc28d;
+  font-size: 11px;
+}
+
+.sandboxtrace-brand-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f5ebd9;
+  letter-spacing: 0.08em;
+}
+
+.sandboxtrace-brand-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 600;
+  color: #c8a96e;
+  letter-spacing: 0.1em;
+  opacity: 0.85;
+}
+
+/* Classification Seal Badge */
+.sandboxtrace-seal {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid;
+}
+
+.sandboxtrace-seal-safe {
+  background: #16271e;
+  border-color: rgba(85, 143, 112, 0.6);
+  color: #a8e6cf;
+}
+
+.sandboxtrace-seal-suspicious {
+  background: #2d2011;
+  border-color: rgba(226, 165, 84, 0.6);
+  color: #ffd180;
+}
+
+.sandboxtrace-seal-malicious, .sandboxtrace-seal-error {
+  background: #2c1218;
+  border-color: rgba(180, 56, 77, 0.6);
+  color: #ff8a9a;
+}
+
+.sandboxtrace-seal-scanning {
+  background: #251b33;
+  border-color: rgba(200, 169, 110, 0.4);
+  color: #dfc28d;
+  animation: sandboxtrace-pulse 1.5s infinite;
+}
+
+/* Title */
+#sandboxtrace-gmail-banner strong,
+.sandboxtrace-title {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f5ebd9;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+/* Telemetry Metrics Pills */
+.sandboxtrace-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.sandboxtrace-metric-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(30, 21, 45, 0.7);
+  border: 1px solid rgba(200, 169, 110, 0.2);
+  font-size: 11px;
+}
+
+.sandboxtrace-metric-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #dfc28d;
+  letter-spacing: 0.05em;
+}
+
+.sandboxtrace-metric-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f5ebd9;
+}
+
+.sandboxtrace-message {
+  font-size: 12px;
+  color: #d5cbbd;
+}
+
+/* Action Buttons */
+.sandboxtrace-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(200, 169, 110, 0.15);
+  padding-top: 10px;
+}
+
+#sandboxtrace-gmail-banner a,
+.sandboxtrace-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #2e2345 0%, #1c152a 100%);
+  border: 1px solid rgba(200, 169, 110, 0.5);
+  color: #f5ebd9 !important;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-decoration: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+#sandboxtrace-gmail-banner a:hover,
+.sandboxtrace-btn-primary:hover {
+  background: linear-gradient(180deg, #3a2c56 0%, #241b36 100%);
+  border-color: #dfc28d;
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(200, 169, 110, 0.25);
+}
+
+#sandboxtrace-gmail-banner button,
+.sandboxtrace-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(28, 21, 42, 0.8);
+  border: 1px solid rgba(200, 169, 110, 0.25);
+  color: #d5cbbd;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#sandboxtrace-gmail-banner button:hover,
+.sandboxtrace-btn-secondary:hover {
+  background: rgba(42, 31, 60, 0.9);
+  border-color: rgba(200, 169, 110, 0.5);
+  color: #f5ebd9;
+}
+
+.sandboxtrace-dismiss {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% !important;
+  background: transparent !important;
+  border: 1px solid rgba(200, 169, 110, 0.2) !important;
+  color: #a498b2 !important;
+  font-size: 11px !important;
+  padding: 0 !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sandboxtrace-dismiss:hover {
+  border-color: #dfc28d !important;
+  color: #f5ebd9 !important;
+  background: rgba(200, 169, 110, 0.15) !important;
+}
+
+@keyframes sandboxtrace-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sandboxtrace-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}

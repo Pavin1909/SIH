@@ -18,5 +18,14 @@ class SandboxClient:
                 response = await client.post(f"{self.endpoint}/render", json={"url": url})
                 response.raise_for_status()
                 return response.json()
+        except httpx.HTTPStatusError as exc:
+            detail = ""
+            try:
+                body = exc.response.json()
+                if isinstance(body, dict) and body.get("detail"):
+                    detail = f": {body['detail']}"
+            except (ValueError, TypeError):
+                pass
+            raise SandboxUnavailableError(f"Sandbox render failed for target: {url}{detail}") from exc
         except (httpx.HTTPError, ValueError) as exc:
-            raise SandboxUnavailableError(f"Sandbox render failed for target: {url}") from exc
+            raise SandboxUnavailableError(f"Sandbox render failed for target: {url}: {exc}") from exc

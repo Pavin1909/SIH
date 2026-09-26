@@ -8,7 +8,7 @@ export interface CyberGlobeProps {
 
 export function CyberGlobe({
   status = "online",
-  statusLabel = "Online",
+  statusLabel = "Atelier Online",
   className = "",
 }: CyberGlobeProps) {
   const isOnline = status === "online";
@@ -18,221 +18,174 @@ export function CyberGlobe({
       className={`relative flex items-center justify-center overflow-hidden select-none pointer-events-none ${className}`}
       aria-hidden="true"
     >
-      {/* Ambient background glow for globe */}
+      {/* Soft warm antique amber/plum background aura */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="h-64 w-64 rounded-full bg-cyan-500/15 blur-3xl animate-pulse" />
-        <div className="h-48 w-48 rounded-full bg-blue-600/15 blur-2xl" />
+        <div className="h-64 w-64 rounded-full bg-[#c8a96e]/08 blur-3xl" />
+        <div className="h-48 w-48 rounded-full bg-[#3d2752]/20 blur-2xl" />
       </div>
 
-      {/* Cyber Digital Globe SVG */}
+      {/* Engraved Intelligence Atlas SVG (Vintage Cartographic Armillary Sphere) */}
       <svg
         viewBox="0 0 400 400"
-        className="relative z-10 h-72 w-72 sm:h-80 sm:w-80 md:h-96 md:w-96 text-cyan-400 opacity-90 transition-transform duration-700"
+        className="relative z-10 h-72 w-72 sm:h-80 sm:w-80 md:h-96 md:w-96 text-[#c8a96e] opacity-90 transition-transform duration-700"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <radialGradient id="globeSphere" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#081d38" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3" />
+          <radialGradient id="atlasSphere" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#251b36" stopOpacity="0.85" />
+            <stop offset="70%" stopColor="#191225" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#120c1c" stopOpacity="0.98" />
           </radialGradient>
 
-          <linearGradient id="orbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
-            <stop offset="50%" stopColor="#0284c7" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.9" />
+          <linearGradient id="brassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#dfc28d" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#c8a96e" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#a37e44" stopOpacity="0.9" />
           </linearGradient>
 
-          <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.2" />
-            <stop offset="50%" stopColor="#06b6d4" stopOpacity="1" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.3" />
-          </linearGradient>
-
-          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+          <filter id="parchmentShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
         </defs>
 
-        {/* Sphere Base with soft radial gradient */}
+        {/* Outer Engraved Brass Meridian Ring */}
         <circle
           cx="200"
           cy="200"
-          r="140"
-          fill="url(#globeSphere)"
-          stroke="#06b6d4"
+          r="160"
+          stroke="#c8a96e"
           strokeWidth="1.5"
-          strokeOpacity="0.4"
+          strokeOpacity="0.3"
         />
-
-        {/* Outer subtle glow rim */}
         <circle
           cx="200"
           cy="200"
-          r="142"
-          stroke="#38bdf8"
+          r="154"
+          stroke="#dfc28d"
           strokeWidth="0.8"
-          strokeDasharray="4 8"
-          strokeOpacity="0.6"
+          strokeDasharray="2 4"
+          strokeOpacity="0.45"
         />
 
-        {/* Latitude Rings (Horizontal Ellipses) */}
+        {/* Cardinal Markers on Meridian */}
+        <text x="200" y="32" fill="#dfc28d" fontSize="9" fontFamily="Cinzel, Georgia, serif" textAnchor="middle" opacity="0.7">N</text>
+        <text x="200" y="378" fill="#dfc28d" fontSize="9" fontFamily="Cinzel, Georgia, serif" textAnchor="middle" opacity="0.7">S</text>
+        <text x="32" y="203" fill="#dfc28d" fontSize="9" fontFamily="Cinzel, Georgia, serif" textAnchor="middle" opacity="0.7">W</text>
+        <text x="372" y="203" fill="#dfc28d" fontSize="9" fontFamily="Cinzel, Georgia, serif" textAnchor="middle" opacity="0.7">E</text>
+
+        {/* Sphere Base with rich smoky vellum gradient */}
+        <circle
+          cx="200"
+          cy="200"
+          r="138"
+          fill="url(#atlasSphere)"
+          stroke="#c8a96e"
+          strokeWidth="1.5"
+          strokeOpacity="0.5"
+        />
+
+        {/* Equator & Parallels (Engraved Cartographic Ellipses) */}
         <ellipse
           cx="200"
           cy="200"
-          rx="140"
+          rx="138"
           ry="38"
-          stroke="#06b6d4"
+          stroke="#dfc28d"
           strokeWidth="1"
-          strokeOpacity="0.35"
+          strokeOpacity="0.4"
           strokeDasharray="3 3"
         />
         <ellipse
           cx="200"
           cy="150"
-          rx="124"
+          rx="122"
           ry="28"
-          stroke="#06b6d4"
+          stroke="#c8a96e"
           strokeWidth="0.8"
-          strokeOpacity="0.25"
+          strokeOpacity="0.3"
         />
         <ellipse
           cx="200"
           cy="250"
-          rx="124"
+          rx="122"
           ry="28"
-          stroke="#06b6d4"
+          stroke="#c8a96e"
           strokeWidth="0.8"
-          strokeOpacity="0.25"
-        />
-        <ellipse
-          cx="200"
-          cy="105"
-          rx="98"
-          ry="18"
-          stroke="#06b6d4"
-          strokeWidth="0.75"
-          strokeOpacity="0.2"
-          strokeDasharray="2 4"
-        />
-        <ellipse
-          cx="200"
-          cy="295"
-          rx="98"
-          ry="18"
-          stroke="#06b6d4"
-          strokeWidth="0.75"
-          strokeOpacity="0.2"
-          strokeDasharray="2 4"
+          strokeOpacity="0.3"
         />
 
-        {/* Longitude Rings (Vertical Ellipses) */}
+        {/* Meridians (Vertical Ellipses) */}
         <ellipse
           cx="200"
           cy="200"
-          rx="45"
-          ry="140"
-          stroke="#06b6d4"
+          rx="38"
+          ry="138"
+          stroke="#c8a96e"
+          strokeWidth="1"
+          strokeOpacity="0.4"
+        />
+        <ellipse
+          cx="200"
+          cy="200"
+          rx="88"
+          ry="138"
+          stroke="#c8a96e"
+          strokeWidth="0.8"
+          strokeOpacity="0.25"
+          strokeDasharray="2 4"
+        />
+
+        {/* Prime Axis Line */}
+        <line
+          x1="200"
+          y1="62"
+          x2="200"
+          y2="338"
+          stroke="#dfc28d"
           strokeWidth="1"
           strokeOpacity="0.35"
         />
-        <ellipse
-          cx="200"
-          cy="200"
-          rx="95"
-          ry="140"
-          stroke="#06b6d4"
-          strokeWidth="0.8"
-          strokeOpacity="0.25"
-        />
         <line
-          x1="200"
-          y1="60"
-          x2="200"
-          y2="340"
-          stroke="#06b6d4"
+          x1="62"
+          y1="200"
+          x2="338"
+          y2="200"
+          stroke="#dfc28d"
           strokeWidth="1"
-          strokeOpacity="0.4"
-          strokeDasharray="4 4"
+          strokeOpacity="0.35"
         />
 
-        {/* Orbit Trajectory Arc 1 */}
-        <path
-          d="M 60 210 Q 150 90, 320 120"
-          fill="none"
-          stroke="url(#orbitGrad)"
-          strokeWidth="1.8"
-          filter="url(#glow)"
-        />
-        {/* Orbit Satellite Node 1 */}
-        <circle cx="270" cy="113" r="3.5" fill="#38bdf8" filter="url(#glow)" />
-        <circle cx="270" cy="113" r="7" stroke="#38bdf8" strokeWidth="0.75" strokeOpacity="0.6" />
-
-        {/* Orbit Trajectory Arc 2 */}
-        <path
-          d="M 90 280 Q 240 330, 340 220"
-          fill="none"
-          stroke="url(#orbitGrad)"
-          strokeWidth="1.5"
-          strokeDasharray="6 4"
-        />
-        {/* Orbit Satellite Node 2 */}
-        <circle cx="160" cy="298" r="3" fill="#06b6d4" filter="url(#glow)" />
-
-        {/* Constellation / Threat Intelligence Grid Nodes */}
-        <g opacity="0.85">
-          <circle cx="160" cy="170" r="2.5" fill="#38bdf8" />
-          <circle cx="230" cy="160" r="2" fill="#06b6d4" />
-          <circle cx="260" cy="190" r="3" fill="#22d3ee" filter="url(#glow)" />
-          <circle cx="180" cy="220" r="2.5" fill="#38bdf8" />
-          <circle cx="140" cy="230" r="2" fill="#06b6d4" />
-          <circle cx="210" cy="245" r="2.5" fill="#22d3ee" />
-
-          {/* Connection Lines between Nodes */}
-          <line x1="160" y1="170" x2="230" y2="160" stroke="#06b6d4" strokeWidth="0.75" strokeOpacity="0.5" />
-          <line x1="230" y1="160" x2="260" y2="190" stroke="#06b6d4" strokeWidth="0.75" strokeOpacity="0.5" />
-          <line x1="260" y1="190" x2="210" y2="245" stroke="#06b6d4" strokeWidth="0.75" strokeOpacity="0.5" />
-          <line x1="180" y1="220" x2="140" y2="230" stroke="#06b6d4" strokeWidth="0.75" strokeOpacity="0.5" />
-          <line x1="180" y1="220" x2="210" y2="245" stroke="#06b6d4" strokeWidth="0.75" strokeOpacity="0.5" />
+        {/* Astrolabe / Celestial Coordinates Orbit */}
+        <g className="animate-[spin_40s_linear_infinite]" style={{ transformOrigin: "200px 200px" }}>
+          <ellipse
+            cx="200"
+            cy="200"
+            rx="148"
+            ry="68"
+            stroke="url(#brassGrad)"
+            strokeWidth="1.2"
+            strokeDasharray="6 8 2 8"
+            strokeOpacity="0.65"
+            transform="rotate(-25 200 200)"
+          />
+          {/* Celestial node pins */}
+          <circle cx="340" cy="150" r="3.5" fill="#dfc28d" stroke="#8c2535" strokeWidth="1" />
+          <circle cx="60" cy="250" r="2.5" fill="#dfc28d" stroke="#161122" strokeWidth="1" />
         </g>
+
+        {/* Constellation / Astrolabe Flourish */}
+        <circle cx="200" cy="200" r="4" fill="#dfc28d" />
+        <circle cx="200" cy="200" r="9" stroke="#dfc28d" strokeWidth="0.8" strokeOpacity="0.5" strokeDasharray="2 2" />
       </svg>
 
-      {/* Floating Glass Telemetry Card matching reference image */}
-      <div className="pointer-events-auto absolute right-4 top-4 sm:right-8 sm:top-8 z-20 rounded-2xl border border-white/[0.1] bg-[#0c1527]/80 p-3.5 sm:p-4 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.6),0_0_20px_rgba(6,182,212,0.15)] max-w-[200px] sm:max-w-[220px]">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-          System Status
-        </div>
-        <div className="mt-1 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span
-              className={`h-2.5 w-2.5 rounded-full ${
-                isOnline ? "bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" : "bg-rose-500"
-              }`}
-            />
-            <span className="text-base font-bold text-slate-100">
-              {statusLabel}
-            </span>
-          </div>
-
-          {/* Luminous Telemetry Wave Line */}
-          <svg
-            className="h-6 w-16 text-cyan-400"
-            viewBox="0 0 80 24"
-            fill="none"
-          >
-            <path
-              d="M 0 12 Q 10 3, 20 12 T 40 12 T 60 12 T 80 12"
-              stroke="#06b6d4"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
-        <div className="mt-1.5 text-[10px] text-slate-400">
-          AI Security Intelligence Platform
-        </div>
+      {/* Archival Ledger Tag at the Base */}
+      <div className="absolute bottom-1 z-20 flex items-center gap-2 rounded border border-[#c8a96e]/30 bg-[#161122]/90 px-3 py-1 font-serif text-[10px] text-[#dfc28d] backdrop-blur-md shadow-md">
+        <span>❖</span>
+        <span className="font-bold tracking-wider">THREAT ATLAS</span>
+        <span className="text-[#a498b2]">•</span>
+        <span className="text-[#e8e1d5]">{statusLabel}</span>
       </div>
     </div>
   );

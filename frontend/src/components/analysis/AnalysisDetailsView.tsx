@@ -18,6 +18,8 @@ import {
   Terminal,
 } from "../icons";
 import { RiskIndicator } from "../ui/RiskIndicator";
+import { ClassificationSeal } from "../archive/ClassificationSeal";
+import { OrnamentalDivider } from "../archive/OrnamentalDivider";
 import { ErrorState } from "../ui/ErrorState";
 import { LoadingState } from "../ui/LoadingState";
 import type { Analysis, EmailInfo, ForensicRun } from "../../types";
@@ -185,10 +187,10 @@ export function AnalysisDetailsView() {
 
   // Semantic styles for the primary verdict panel based strictly on real backend tone
   const verdictGlowClass = {
-    safe: "border-emerald-500/30 shadow-[0_0_50px_rgba(16,185,129,0.12)] bg-gradient-to-b from-emerald-950/20 via-[#0c1527]/70 to-[#080d19]/90",
-    suspicious: "border-amber-500/30 shadow-[0_0_50px_rgba(245,158,11,0.12)] bg-gradient-to-b from-amber-950/20 via-[#0c1527]/70 to-[#080d19]/90",
-    malicious: "border-rose-500/30 shadow-[0_0_50px_rgba(239,68,68,0.15)] bg-gradient-to-b from-rose-950/25 via-[#0c1527]/70 to-[#080d19]/90",
-    neutral: "border-white/[0.08] shadow-[0_0_40px_rgba(0,0,0,0.3)] bg-gradient-to-b from-slate-900/30 via-[#0c1527]/70 to-[#080d19]/90",
+    safe: "border-[#558f70]/40 shadow-[0_12px_40px_rgba(0,0,0,0.6)] bg-gradient-to-b from-[#14261d]/85 via-[#181124]/90 to-[#120c1a]",
+    suspicious: "border-[#e2a554]/40 shadow-[0_12px_40px_rgba(0,0,0,0.6)] bg-gradient-to-b from-[#291c0a]/85 via-[#181124]/90 to-[#120c1a]",
+    malicious: "border-[#b4384d]/40 shadow-[0_12px_40px_rgba(0,0,0,0.6)] bg-gradient-to-b from-[#2c1218]/85 via-[#181124]/90 to-[#120c1a]",
+    neutral: "border-[#c8a96e]/30 shadow-[0_12px_40px_rgba(0,0,0,0.6)] bg-gradient-to-b from-[#1f162e]/85 via-[#181124]/90 to-[#120c1a]",
   }[tone];
 
   // 15. Loading State
@@ -327,8 +329,13 @@ export function AnalysisDetailsView() {
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
-              <RiskIndicator level={riskLevel} size="lg" />
-              <span className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1 font-mono text-xs text-slate-300">
+              <ClassificationSeal
+                verdict={displayedVerdict}
+                score={effectiveProb !== null ? Math.round(effectiveProb * 100) : null}
+                size="md"
+                subtitle="Forensic Verdict"
+              />
+              <span className="font-serif rounded-lg border border-[#c8a96e]/30 bg-[#161022] px-3 py-1 text-xs font-bold text-[#dfc28d]">
                 {displayedVerdict}
               </span>
             </div>

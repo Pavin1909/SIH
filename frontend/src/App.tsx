@@ -5,10 +5,12 @@ import { Dashboard } from "./components/dashboard/Dashboard";
 import { EmailAnalysisConsole } from "./components/analysis/EmailAnalysisConsole";
 import { AnalysisDetailsView } from "./components/analysis/AnalysisDetailsView";
 import { WebForensicsConsole } from "./components/forensics/WebForensicsConsole";
+import { GeoMap } from "./components/GeoMap";
+import { ReportsPage } from "./components/reports/ReportsPage";
 import { AppShell } from "./components/shell/AppShell";
 import { Badge as UiBadge, EmptyState, ErrorState, LoadingState } from "./components/ui";
 import type { Analysis, AnalysisWithEmail, EmailInfo, ForensicReport, ForensicRun, InfrastructureObservation, ProviderObservation } from "./types";
-import { dateTime, percent, verdictTone } from "./utils";
+import { dateTime, getStoredInvestigationIds, percent, verdictTone } from "./utils";
 
 const unavailable = "Unavailable";
 const cache = { get<T>(key: string): T | null { try { return JSON.parse(localStorage.getItem(key) || "null") as T | null; } catch { return null; } }, set(key: string, value: unknown) { localStorage.setItem(key, JSON.stringify(value)); } };
@@ -74,36 +76,40 @@ function ProviderCard({ item }: { item: ProviderObservation }) {
 function InfrastructureCard({ item }: { item: InfrastructureObservation }) {
   const location = [item.city, item.region, item.country].filter(Boolean).join(", ") || unavailable;
   return (
-    <div className="panel">
+    <div className="relative rounded-xl border border-[#c8a96e]/25 bg-[#161122]/90 p-5 shadow-lg backdrop-blur-xl">
+      <span className="pointer-events-none absolute top-1.5 left-2 font-serif text-[9px] text-[#c8a96e]/50 select-none">❖</span>
+      <span className="pointer-events-none absolute top-1.5 right-2 font-serif text-[9px] text-[#c8a96e]/50 select-none">❖</span>
       <div className="flex items-center justify-between gap-3">
-        <strong className="text-slate-200">{value(item.domain || item.ip)}</strong>
-        <Badge value={String(item.geoip_status || item.enrichment_status || item.status || unavailable)} />
+        <strong className="font-serif text-sm font-bold text-[#dfc28d]">{value(item.domain || item.ip)}</strong>
+        <span className="rounded border border-[#c8a96e]/30 bg-[#251b33] px-2 py-0.5 font-serif text-[10px] font-bold text-[#dfc28d]">
+          {String(item.geoip_status || item.enrichment_status || item.status || unavailable).toUpperCase()}
+        </span>
       </div>
-      <p className="mt-2 text-xs text-slate-500">Observed infrastructure location, not an attacker’s physical location.</p>
-      <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
+      <p className="mt-1.5 text-xs text-[#a498b2]">Cartographic server node, not an attacker’s physical location.</p>
+      <dl className="mt-4 grid grid-cols-2 gap-4 text-xs">
         <div>
-          <dt className="label">IP</dt>
-          <dd className="text-slate-200">{value(item.ip)}</dd>
+          <dt className="label">IP Address</dt>
+          <dd className="font-mono text-[11px] text-[#e8e1d5] mt-0.5">{value(item.ip)}</dd>
         </div>
         <div>
-          <dt className="label">Country / region / city</dt>
-          <dd className="text-slate-200">{location}</dd>
+          <dt className="label">Location</dt>
+          <dd className="text-[#e8e1d5] mt-0.5">{location}</dd>
         </div>
         <div>
           <dt className="label">ASN</dt>
-          <dd className="text-slate-200">{value(item.asn)}</dd>
+          <dd className="font-mono text-[11px] text-[#e8e1d5] mt-0.5">{value(item.asn)}</dd>
         </div>
         <div>
-          <dt className="label">ISP / organization</dt>
-          <dd className="text-slate-200">{value(item.isp || item.asn_org)}</dd>
+          <dt className="label">ISP / Organization</dt>
+          <dd className="text-[#e8e1d5] mt-0.5">{value(item.isp || item.asn_org)}</dd>
         </div>
         <div>
-          <dt className="label">VPN / TOR / proxy</dt>
-          <dd className="text-slate-200">{flag(item.vpn)} / {flag(item.tor)} / {flag(item.proxy)}</dd>
+          <dt className="label">VPN / TOR / Proxy</dt>
+          <dd className="text-[#e8e1d5] mt-0.5">{flag(item.vpn)} / {flag(item.tor)} / {flag(item.proxy)}</dd>
         </div>
         <div>
-          <dt className="label">Source/provider</dt>
-          <dd className="text-slate-200">{value(item.source)}</dd>
+          <dt className="label">Intelligence Provider</dt>
+          <dd className="font-mono text-[11px] text-[#dfc28d] mt-0.5">{value(item.source)}</dd>
         </div>
       </dl>
     </div>
@@ -139,24 +145,28 @@ function Infrastructure() {
 
   return (
     <State loading={loading} error={error} empty={!run}>
-      <section className="space-y-6">
-        <div>
-          <p className="label">Phase 3</p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-100">Infrastructure intelligence</h1>
-          <p className="mt-2 text-slate-400">Live DNS, IP, GeoIP, provider, and correlation evidence.</p>
+      <section className="space-y-6 animate-in fade-in duration-300">
+        <div className="border-b border-[#c8a96e]/15 pb-4">
+          <div className="inline-flex items-center gap-2 rounded border border-[#c8a96e]/30 bg-[#251b33] px-2.5 py-0.5 font-serif text-[10px] font-bold tracking-widest text-[#dfc28d] uppercase">
+            <span>❖</span>
+            <span>Chapter 04 • Threat Atlas</span>
+          </div>
+          <h1 className="mt-2 font-serif text-2xl sm:text-3xl font-extrabold text-[#f5ebd9]">Geospatial Threat Atlas</h1>
+          <p className="mt-1 text-xs text-[#a498b2]">Live topological server coordinates, DNS, IP reputation, and correlation evidence.</p>
         </div>
+        <GeoMap observations={observed} />
         <div className="grid gap-4 md:grid-cols-2">
           {observed.length ? (
             observed.map((item, index) => (
               <InfrastructureCard item={item} key={`${item.ip || item.domain}-${index}`} />
             ))
           ) : (
-            <div className="panel text-slate-400">No infrastructure observations were returned by live providers.</div>
+            <div className="panel text-xs text-[#a498b2]">No infrastructure observations were returned by live providers.</div>
           )}
         </div>
-        <div className="panel">
-          <h2 className="font-semibold text-slate-100">Forensic report</h2>
-          <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-lg bg-soc-950 p-4 text-xs text-slate-400 border border-soc-700/50">
+        <div className="rounded-xl border border-[#c8a96e]/25 bg-[#161122]/90 p-5 shadow-lg">
+          <h2 className="font-serif text-sm font-bold tracking-wide text-[#dfc28d]">Forensic Intelligence Transcript</h2>
+          <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-lg bg-[#120d1a] p-4 text-xs font-serif text-[#d5cbbd] border border-[#c8a96e]/15 leading-relaxed">
             {report ? report.report_markdown : "The report endpoint is unavailable or requires the configured API key."}
           </pre>
         </div>
@@ -167,9 +177,30 @@ function Infrastructure() {
 
 /* Entry point handlers for shell navigation */
 function ForensicsEntry() {
-  const lastRun = cache.get<ForensicRun>("lastRun");
-  if (lastRun?.id) {
-    return <Navigate to={`/forensics/${lastRun.id}`} replace />;
+  const [targetId, setTargetId] = useState<string | null>(() => {
+    const lastRun = cache.get<ForensicRun>("lastRun");
+    return lastRun?.id || getStoredInvestigationIds()[0] || null;
+  });
+  const [checking, setChecking] = useState<boolean>(!targetId);
+
+  useEffect(() => {
+    if (targetId) return;
+    let active = true;
+    api.latestInvestigation().then((latest) => {
+      if (active && latest.forensic?.id) {
+        setTargetId(latest.forensic.id);
+      }
+    }).finally(() => {
+      if (active) setChecking(false);
+    });
+    return () => { active = false; };
+  }, [targetId]);
+
+  if (targetId) {
+    return <Navigate to={`/forensics/${targetId}`} replace />;
+  }
+  if (checking) {
+    return <LoadingState message="Checking active investigations…" />;
   }
   return (
     <div className="py-6">
@@ -187,9 +218,30 @@ function ForensicsEntry() {
 }
 
 function InfrastructureEntry() {
-  const lastRun = cache.get<ForensicRun>("lastRun");
-  if (lastRun?.id) {
-    return <Navigate to={`/infrastructure/${lastRun.id}`} replace />;
+  const [targetId, setTargetId] = useState<string | null>(() => {
+    const lastRun = cache.get<ForensicRun>("lastRun");
+    return lastRun?.id || getStoredInvestigationIds()[0] || null;
+  });
+  const [checking, setChecking] = useState<boolean>(!targetId);
+
+  useEffect(() => {
+    if (targetId) return;
+    let active = true;
+    api.latestInvestigation().then((latest) => {
+      if (active && latest.forensic?.id) {
+        setTargetId(latest.forensic.id);
+      }
+    }).finally(() => {
+      if (active) setChecking(false);
+    });
+    return () => { active = false; };
+  }, [targetId]);
+
+  if (targetId) {
+    return <Navigate to={`/infrastructure/${targetId}`} replace />;
+  }
+  if (checking) {
+    return <LoadingState message="Checking active investigations…" />;
   }
   return (
     <div className="py-6">
@@ -203,47 +255,6 @@ function InfrastructureEntry() {
         }
       />
     </div>
-  );
-}
-
-function ReportsView() {
-  const lastRun = cache.get<ForensicRun>("lastRun");
-  return (
-    <section className="space-y-6">
-      <div>
-        <p className="label">Reporting</p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-100">Threat Reports</h1>
-        <p className="mt-2 text-slate-400">
-          Forensic evidence summaries generated from fused email, DOM, VLM, and infrastructure intelligence.
-        </p>
-      </div>
-      {lastRun?.id ? (
-        <div className="panel space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-slate-100">Latest Investigation Report</h2>
-              <p className="text-xs text-slate-400 mt-1 font-mono">{lastRun.url}</p>
-            </div>
-            <Badge value={lastRun.verdict} />
-          </div>
-          <div className="pt-2">
-            <NavLink className="button-secondary text-xs" to={`/infrastructure/${lastRun.id}`}>
-              View Forensic Report Details →
-            </NavLink>
-          </div>
-        </div>
-      ) : (
-        <EmptyState
-          title="No reports generated"
-          message="Forensic reports are automatically generated upon completion of an investigation run."
-          action={
-            <NavLink className="button" to="/email-analysis">
-              Analyze an Email
-            </NavLink>
-          }
-        />
-      )}
-    </section>
   );
 }
 
@@ -266,41 +277,44 @@ function SettingsView() {
   }
 
   return (
-    <section className="space-y-6">
-      <div>
-        <p className="label">System</p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-100">Settings</h1>
-        <p className="mt-2 text-slate-400">Platform configuration and backend connectivity.</p>
+    <section className="space-y-6 animate-in fade-in duration-300">
+      <div className="border-b border-[#c8a96e]/15 pb-4">
+        <div className="inline-flex items-center gap-2 rounded border border-[#c8a96e]/30 bg-[#251b33] px-2.5 py-0.5 font-serif text-[10px] font-bold tracking-widest text-[#dfc28d] uppercase">
+          <span>❖</span>
+          <span>Chapter 06 • Atelier & System</span>
+        </div>
+        <h1 className="mt-2 font-serif text-2xl sm:text-3xl font-extrabold text-[#f5ebd9]">Atelier Settings</h1>
+        <p className="mt-1 text-xs text-[#a498b2]">Platform configuration, backend connectivity, and case cache ledger.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="panel space-y-3">
-          <h2 className="text-base font-semibold text-slate-100">Backend Connection</h2>
-          <div className="text-sm space-y-2.5">
-            <div className="flex items-center justify-between border-b border-soc-700/60 pb-2.5">
-              <span className="text-slate-400">API Endpoint</span>
-              <span className="font-mono text-xs text-cyan-400">{API_BASE_URL}</span>
+        <div className="rounded-xl border border-[#c8a96e]/25 bg-[#161122]/90 p-5 shadow-lg space-y-3">
+          <h2 className="font-serif text-sm font-bold tracking-wide text-[#dfc28d]">Backend Atelier Connection</h2>
+          <div className="text-xs space-y-2.5">
+            <div className="flex items-center justify-between border-b border-[#c8a96e]/15 pb-2.5">
+              <span className="text-[#a498b2]">API Endpoint</span>
+              <span className="font-mono text-xs text-[#dfc28d]">{API_BASE_URL}</span>
             </div>
-            <div className="flex items-center justify-between border-b border-soc-700/60 pb-2.5">
-              <span className="text-slate-400">Health Status</span>
+            <div className="flex items-center justify-between border-b border-[#c8a96e]/15 pb-2.5">
+              <span className="text-[#a498b2]">Atelier Status</span>
               <Badge value={health} />
             </div>
             <div className="flex items-center justify-between pt-0.5">
-              <span className="text-slate-400">Mode</span>
-              <span className="font-mono text-xs text-slate-300">{import.meta.env.MODE || "production"}</span>
+              <span className="text-[#a498b2]">Mode</span>
+              <span className="font-mono text-xs text-[#e8e1d5]">{import.meta.env.MODE || "production"}</span>
             </div>
           </div>
         </div>
 
-        <div className="panel space-y-3">
-          <h2 className="text-base font-semibold text-slate-100">Investigation Cache</h2>
-          <div className="text-sm space-y-2.5">
-            <div className="flex items-center justify-between border-b border-soc-700/60 pb-2.5">
-              <span className="text-slate-400">Cached Analysis</span>
-              <span className="font-mono text-xs text-slate-300">{lastAnalysis ? lastAnalysis.id.slice(0, 12) + "…" : "None"}</span>
+        <div className="rounded-xl border border-[#c8a96e]/25 bg-[#161122]/90 p-5 shadow-lg space-y-3">
+          <h2 className="font-serif text-sm font-bold tracking-wide text-[#dfc28d]">Case Cache Ledger</h2>
+          <div className="text-xs space-y-2.5">
+            <div className="flex items-center justify-between border-b border-[#c8a96e]/15 pb-2.5">
+              <span className="text-[#a498b2]">Cached Correspondence</span>
+              <span className="font-mono text-xs text-[#e8e1d5]">{lastAnalysis ? lastAnalysis.id.slice(0, 16) + "…" : "None"}</span>
             </div>
-            <div className="flex items-center justify-between border-b border-soc-700/60 pb-2.5">
-              <span className="text-slate-400">Cached Forensic Run</span>
-              <span className="font-mono text-xs text-slate-300">{lastRun ? lastRun.id.slice(0, 12) + "…" : "None"}</span>
+            <div className="flex items-center justify-between border-b border-[#c8a96e]/15 pb-2.5">
+              <span className="text-[#a498b2]">Cached Specimen Run</span>
+              <span className="font-mono text-xs text-[#e8e1d5]">{lastRun ? lastRun.id.slice(0, 16) + "…" : "None"}</span>
             </div>
           </div>
           <div className="pt-2">
@@ -328,7 +342,8 @@ export default function App() {
         {/* Shell entry routes */}
         <Route path="/forensics" element={<ForensicsEntry />} />
         <Route path="/infrastructure" element={<InfrastructureEntry />} />
-        <Route path="/reports" element={<ReportsView />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/reports/:reportId" element={<ReportsPage />} />
         <Route path="/settings" element={<SettingsView />} />
 
         {/* Fallback route */}

@@ -1,1 +1,81 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="stylesheet" href="options.css"><title>SandBoxTrace settings</title></head><body><main><p class="eyebrow">SandBoxTrace for Gmail</p><h1>Connection settings</h1><p>Use the same FastAPI service and dashboard used by your local deployment. The extension requests permission only for the configured backend origin.</p><form id="form"><label>Backend API URL<input id="backendUrl" type="url" required placeholder="http://localhost:8000"></label><label>Dashboard URL<input id="dashboardUrl" type="url" required placeholder="http://localhost:3000"></label><p id="message" role="status"></p><button>Save settings</button></form><p class="hint">Also add this extension’s Chrome ID to <code>SANDBOXTRACE_CORS_ORIGINS</code> (for example, <code>chrome-extension://YOUR_EXTENSION_ID</code>) before scanning.</p></main><script src="options.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zentra — Connection Registry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="archive-backdrop">
+    <main class="codex-frame">
+      <div class="codex-corner codex-tl">❖</div>
+      <div class="codex-corner codex-tr">❖</div>
+      <div class="codex-corner codex-bl">❖</div>
+      <div class="codex-corner codex-br">❖</div>
+
+      <!-- Header with Signet -->
+      <header class="codex-header">
+        <div class="signet-crest">
+          <span>❖</span>
+        </div>
+        <div>
+          <p class="codex-eyebrow">Archival Registry • Configuration</p>
+          <h1 class="codex-title">Connection Settings</h1>
+        </div>
+      </header>
+
+      <p class="codex-desc">
+        Configure the link between your local browser extension and the Zentra Intelligence Core. The extension requests runtime origin permissions only for the designated analytical endpoint.
+      </p>
+
+      <!-- Registry Form -->
+      <form id="form" class="codex-form">
+        <div class="field-group">
+          <label for="backendUrl">
+            <span class="field-label">Backend API Registry URL</span>
+            <span class="field-sub">FastAPI Sandbox Forensics & VLM Engine</span>
+          </label>
+          <div class="input-wrap">
+            <input id="backendUrl" type="url" required placeholder="http://localhost:8000" spellcheck="false" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="dashboardUrl">
+            <span class="field-label">Archive Console URL</span>
+            <span class="field-sub">Investigator Dossier & Forensic Reports UI</span>
+          </label>
+          <div class="input-wrap">
+            <input id="dashboardUrl" type="url" required placeholder="http://localhost:3000" spellcheck="false" autocomplete="off">
+          </div>
+        </div>
+
+        <div id="message" class="status-ledger" role="status" aria-live="polite"></div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-save">
+            <span>Commit Connection</span>
+            <span class="btn-glyph">→</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Archival Guidance Notice -->
+      <footer class="archival-notice">
+        <div class="notice-icon">📜</div>
+        <div class="notice-content">
+          <strong class="notice-title">CORS Allowance Invariant</strong>
+          <p class="notice-text">
+            Ensure this extension’s unique runtime identifier is declared in <code>SANDBOXTRACE_CORS_ORIGINS</code> (e.g., <code>chrome-extension://YOUR_EXTENSION_ID</code>) within the backend environment prior to dispatching forensic scans.
+          </p>
+        </div>
+      </footer>
+    </main>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

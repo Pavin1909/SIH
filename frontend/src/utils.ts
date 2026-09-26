@@ -158,3 +158,27 @@ export function getRiskConfig(value: unknown): RiskConfig {
 export function percent(value: number | null): string { return value === null ? "Unavailable" : `${Math.round(value * 100)}%`; }
 export function dateTime(value: string): string { return new Date(value).toLocaleString(); }
 
+const STORAGE_KEY = "zentra_investigation_ids";
+
+export function getStoredInvestigationIds(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveInvestigationId(id: string): void {
+  if (!id || typeof id !== "string") return;
+  try {
+    const ids = getStoredInvestigationIds();
+    if (!ids.includes(id)) {
+      ids.unshift(id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(ids.slice(0, 50)));
+    }
+  } catch {
+    // Ignore storage quota or access errors
+  }
+}
+

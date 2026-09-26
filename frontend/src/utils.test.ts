@@ -81,3 +81,31 @@ describe("format helpers", () => {
   });
 });
 
+describe("investigation storage helpers", () => {
+  it("saves and retrieves investigation IDs from localStorage", async () => {
+    const storage: Record<string, string> = {};
+    const mockLocalStorage = {
+      getItem: (key: string) => storage[key] ?? null,
+      setItem: (key: string, val: string) => { storage[key] = val; },
+      removeItem: (key: string) => { delete storage[key]; },
+      clear: () => { Object.keys(storage).forEach((k) => delete storage[k]); },
+    };
+    (globalThis as unknown as { localStorage: typeof mockLocalStorage }).localStorage = mockLocalStorage;
+
+    const { getStoredInvestigationIds, saveInvestigationId } = await import("./utils");
+    expect(getStoredInvestigationIds()).toEqual([]);
+
+    saveInvestigationId("inv-1234");
+    expect(getStoredInvestigationIds()).toEqual(["inv-1234"]);
+
+    // Does not duplicate IDs
+    saveInvestigationId("inv-1234");
+    expect(getStoredInvestigationIds()).toEqual(["inv-1234"]);
+
+    // Prepends new IDs
+    saveInvestigationId("inv-5678");
+    expect(getStoredInvestigationIds()).toEqual(["inv-5678", "inv-1234"]);
+  });
+});
+
+

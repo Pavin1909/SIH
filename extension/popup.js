@@ -159,7 +159,7 @@ function renderError(message) {
   scanBtn.disabled = false;
 
   errorTitle.textContent = "Scan Failure";
-  errorDetail.textContent = message || "Unable to connect to ThreatTrace backend.";
+  errorDetail.textContent = message || "Unable to connect to Zentra backend.";
 }
 
 // Check Backend Connection Health
@@ -224,7 +224,7 @@ async function triggerAnalysis() {
 
   const isOnline = await checkHealth();
   if (!isOnline) {
-    renderError("Unable to connect to ThreatTrace backend on http://localhost:8000. Ensure the FastAPI server is running.");
+    renderError("Unable to connect to Zentra backend on http://localhost:8000. Ensure the FastAPI server is running.");
     return;
   }
 
